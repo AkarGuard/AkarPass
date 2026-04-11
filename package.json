@@ -1,0 +1,27 @@
+{
+  "name": "akarpass",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-grade zero-knowledge password manager with hybrid post-quantum cryptography",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean",
+    "audit": "pnpm audit --audit-level=moderate",
+    "audit:fix": "pnpm audit --fix"
+  },
+  "devDependencies": {
+    "turbo": "2.3.3",
+    "typescript": "5.6.3",
+    "prettier": "3.3.3",
+    "@types/node": "22.9.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.14.4"
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@akarpass/crypto",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zero-knowledge cryptography engine: Argon2id + AES-256-GCM + ML-KEM hybrid",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@noble/post-quantum": "0.2.1",
+    "hash-wasm": "4.11.0"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}

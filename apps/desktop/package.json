@@ -1,0 +1,35 @@
+{
+  "name": "@akarpass/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AkarPass desktop application (Tauri + React)",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "dev:vite": "vite",
+    "build:vite": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@akarpass/auth": "workspace:*",
+    "@akarpass/core": "workspace:*",
+    "@akarpass/crypto": "workspace:*",
+    "@akarpass/storage": "workspace:*",
+    "@akarpass/sync": "workspace:*",
+    "@akarpass/ui": "workspace:*",
+    "@supabase/supabase-js": "2.46.2",
+    "@tauri-apps/api": "2.1.1",
+    "@tauri-apps/plugin-opener": "2.2.7",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.28.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.1.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.3.3",
+    "typescript": "5.6.3",
+    "vite": "5.4.11"
+  }
+}

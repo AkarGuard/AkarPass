@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+out/
+.next/
+build/
+
+# Rust / Tauri
+target/
+src-tauri/target/
+
+# Environment variables — NEVER commit real credentials
+.env
+.env.local
+.env.*.local
+
+# Secrets
+*.pem
+*.key
+*.crx
+
+# Media (large binary assets)
+*.mp4
+*.mp3
+*.wav
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+
+# Tauri bundle outputs
+bundle/
+gen/
+
+# Turborepo cache and build artifacts
+.turbo/
+*.tsbuildinfo
+
+# Remotion render output
+apps/motion/out/

@@ -1,0 +1,41 @@
+[package]
+name = "akarpass-desktop"
+version = "0.1.0"
+description = "AkarPass Desktop"
+authors = ["AkarPass Team"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "akarpass_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "akarpass-desktop"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2.1.1", features = [] }
+tauri-plugin-store = "2.1.0"
+tauri-plugin-opener = "2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+
+[profile.release]
+# Security: strip debug symbols from release builds
+strip = true
+# Optimize for size (reduces attack surface via smaller binary)
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

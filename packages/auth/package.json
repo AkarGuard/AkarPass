@@ -1,0 +1,29 @@
+{
+  "name": "@akarpass/auth",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Authentication: Supabase auth, session management, biometric, auto-lock",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@akarpass/core": "workspace:*",
+    "@akarpass/crypto": "workspace:*",
+    "@supabase/supabase-js": "2.46.2"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}
