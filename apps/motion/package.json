@@ -1,0 +1,28 @@
+{
+  "name": "@akarpass/motion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AkarPass promotional animations (Remotion)",
+  "remotion": {
+    "entryPoint": "src/index.ts"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion render",
+    "render": "remotion render Intro out/intro.mp4",
+    "render:mobile": "remotion render IntroMobile out/intro-mobile.mp4"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.237",
+    "@remotion/cli": "4.0.237",
+    "@remotion/player": "4.0.237",
+    "@remotion/media-utils": "4.0.237"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "typescript": "5.6.3"
+  }
+}

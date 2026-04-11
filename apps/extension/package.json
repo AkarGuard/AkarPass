@@ -1,0 +1,23 @@
+{
+  "name": "@akarpass/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AkarPass browser extension — autofill + secure credential injection",
+  "scripts": {
+    "build": "node scripts/bundle.mjs",
+    "dev": "node scripts/bundle.mjs --watch",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@akarpass/core": "workspace:*",
+    "@akarpass/crypto": "workspace:*",
+    "@akarpass/storage": "workspace:*",
+    "@supabase/supabase-js": "2.46.2"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.279",
+    "esbuild": "0.24.0",
+    "typescript": "5.6.3"
+  }
+}
