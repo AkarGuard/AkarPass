@@ -6,10 +6,8 @@ import type { ExtensionMessage, ExtensionResponse, CredentialSummary } from "../
 
 // ─── Supabase ────────────────────────────────────────────────────────────────
 
-// Replace these with your own Supabase project credentials.
-// See .env.example at the repo root.
-const SUPABASE_URL = "https://your-project-ref.supabase.co";
-const SUPABASE_ANON_KEY = "your-anon-key-here";
+const SUPABASE_URL = "https://lumoloqybblbrvcvjytj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1bW9sb3F5YmJsYnJ2Y3ZqeXRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyOTQ0NjcsImV4cCI6MjA5MDg3MDQ2N30.tyXieSe_EUNwbFsfRtYmBnZ-d7w1JDguPek_YkVT9n4";
 
 let _supabase: SupabaseClient | null = null;
 
@@ -70,7 +68,7 @@ async function signIn(email: string, password: string): Promise<{ error?: string
 
   // Pull vaults from Supabase
   const vaultId = await pullVaultFromCloud();
-  return { vaultId: vaultId ?? undefined };
+  return vaultId ? { vaultId } : {};
 }
 
 async function pullVaultFromCloud(): Promise<string | null> {
@@ -108,7 +106,9 @@ async function handleMessage(message: ExtensionMessage): Promise<ExtensionRespon
   switch (message.type) {
     case "GET_LOCK_STATE": {
       const vaultId = await getActiveVaultId();
-      return { type: "LOCK_STATE", locked: _vault === null, vaultId: vaultId ?? undefined };
+      return vaultId
+        ? { type: "LOCK_STATE", locked: _vault === null, vaultId }
+        : { type: "LOCK_STATE", locked: _vault === null };
     }
 
     case "LOCK_VAULT":
@@ -118,7 +118,9 @@ async function handleMessage(message: ExtensionMessage): Promise<ExtensionRespon
     case "SIGN_IN": {
       const result = await signIn(message.email, message.password);
       if (result.error) return { type: "SIGN_IN_RESULT", success: false, error: result.error };
-      return { type: "SIGN_IN_RESULT", success: true, vaultId: result.vaultId };
+      return result.vaultId
+        ? { type: "SIGN_IN_RESULT", success: true, vaultId: result.vaultId }
+        : { type: "SIGN_IN_RESULT", success: true };
     }
 
     case "SIGN_OUT": {

@@ -8,11 +8,11 @@ import * as vaultService from "@/lib/vault-service";
 const authService = {
   async signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message };
+    return error?.message ? { error: error.message } : {};
   },
   async signUp(email: string, password: string) {
     const { error } = await supabase.auth.signUp({ email, password });
-    return { error: error?.message };
+    return error?.message ? { error: error.message } : {};
   },
   async signOut() {
     await supabase.auth.signOut();

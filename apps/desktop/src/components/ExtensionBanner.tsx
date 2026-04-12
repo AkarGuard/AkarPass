@@ -34,82 +34,96 @@ export function ExtensionBanner() {
 
   if (!visible) return null;
 
+  const bg = state === "done" ? "var(--color-success-light)"
+    : state === "error" ? "var(--color-danger-light)"
+    : "var(--color-accent-light)";
+
+  const borderColor = state === "done" ? "var(--color-success)"
+    : state === "error" ? "var(--color-danger)"
+    : "var(--color-accent)";
+
+  const textColor = state === "done" ? "var(--color-success)"
+    : state === "error" ? "var(--color-danger)"
+    : "var(--color-accent-hover)";
+
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 12,
-      padding: "9px 16px",
-      background: state === "done" ? "#ecfdf5" : state === "error" ? "#fef2f2" : "#eef2ff",
-      borderBottom: `1px solid ${state === "done" ? "#6ee7b7" : state === "error" ? "#fca5a5" : "#c7d2fe"}`,
-      flexShrink: 0, minHeight: 44,
+      padding: "8px 14px",
+      background: bg,
+      borderBottom: `1px solid ${borderColor}`,
+      flexShrink: 0, minHeight: 40,
       transition: "background 0.3s",
     }}>
       {/* Icon */}
       {state === "done" ? (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-          <circle cx="12" cy="12" r="10" fill="#10b981" />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+          <circle cx="12" cy="12" r="10" fill="var(--color-success)" />
           <path d="M8 12l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ) : (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-          <circle cx="12" cy="12" r="4" fill="#6366f1" />
-          <path d="M12 8h8M12 8l-4 6.93M12 8l4 6.93M8 16h8" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+          <circle cx="12" cy="12" r="4" fill="var(--color-accent)" />
+          <path d="M12 8h8M12 8l-4 6.93M12 8l4 6.93M8 16h8" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       )}
 
       {/* Message */}
-      <span style={{ flex: 1, fontSize: 12.5, color: state === "done" ? "#065f46" : state === "error" ? "#991b1b" : "#4338ca" }}>
+      <span style={{ flex: 1, fontSize: 12, color: textColor }}>
         {state === "idle" && (
           <><strong>Chrome eklentisini kurun</strong> — tarayıcınızda otomatik şifre doldurma için.</>
         )}
-        {state === "installing" && "Eklenti kuruluyor..."}
+        {state === "installing" && "Eklenti kuruluyor…"}
         {state === "done" && (
-          <><strong>Eklenti kuruldu!</strong> Chrome'u yeniden başlatın, ardından bildirimi onaylayın.</>
+          <><strong>Eklenti kuruldu!</strong> Chrome'u yeniden başlatın ve bildirimi onaylayın.</>
         )}
         {state === "error" && (
           <><strong>Kurulum hatası:</strong> {errorMsg}</>
         )}
       </span>
 
-      {/* Action button */}
+      {/* Install button */}
       {state === "idle" && (
         <button
           onClick={install}
           style={{
-            padding: "5px 14px",
-            background: "#6366f1", border: "none", borderRadius: 6,
-            color: "#fff", fontSize: 12, fontWeight: 600,
-            cursor: "pointer", flexShrink: 0,
+            padding: "4px 12px",
+            background: "var(--color-accent)", border: "none", borderRadius: 5,
+            color: "#fff", fontSize: 11.5, fontWeight: 600,
+            cursor: "pointer", flexShrink: 0, transition: "background 0.15s",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#4f46e5"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "#6366f1"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-accent-hover)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-accent)"; }}
         >
-          Eklentiyi Kur
+          Kur
         </button>
       )}
 
+      {/* Spinner */}
       {state === "installing" && (
         <div style={{
-          width: 16, height: 16, borderRadius: "50%",
-          border: "2px solid #c7d2fe", borderTopColor: "#6366f1",
+          width: 14, height: 14, borderRadius: "50%",
+          border: "2px solid var(--color-accent-light)", borderTopColor: "var(--color-accent)",
           animation: "spin 0.7s linear infinite", flexShrink: 0,
         }} />
       )}
 
       {/* Dismiss */}
       {(state === "done" || state === "idle" || state === "error") && (
-        <button
-          onClick={dismiss}
-          title="Kapat"
+        <button onClick={dismiss} title="Kapat"
           style={{
-            width: 24, height: 24, flexShrink: 0,
+            width: 22, height: 22, flexShrink: 0,
             background: "transparent", border: "none", borderRadius: 4,
-            cursor: "pointer", color: "#818cf8", fontSize: 14,
+            cursor: "pointer", color: textColor, fontSize: 14,
             display: "flex", alignItems: "center", justifyContent: "center",
+            opacity: 0.7,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#4338ca"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "#818cf8"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; }}
         >
-          ✕
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <line x1="1" y1="1" x2="9" y2="9" /><line x1="9" y1="1" x2="1" y2="9" />
+          </svg>
         </button>
       )}
 

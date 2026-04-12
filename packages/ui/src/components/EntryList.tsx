@@ -1,96 +1,171 @@
 import type { VaultEntry } from "@akarpass/core";
 
 interface Props {
-  entries: VaultEntry[];
-  onSelect: (entry: VaultEntry) => void;
-  query: string;
+  entries:    VaultEntry[];
+  selectedId: string | null;
+  onSelect:   (entry: VaultEntry) => void;
+  query:      string;
+}
+
+// Google S2 favicon — reliable, 32px
+function getFavicon(url: string): string {
+  try {
+    const { hostname } = new URL(url);
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+  } catch { return ""; }
 }
 
 function getDomain(url: string): string {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
 
-function getFavicon(url: string): string {
-  try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`; } catch { return ""; }
+// Deterministic color from title string
+const PALETTE = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#ef4444", "#06b6d4"];
+function pickColor(str: string): string {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+  return PALETTE[Math.abs(h) % PALETTE.length]!;
 }
 
-function getInitial(title: string): string {
-  return title.charAt(0).toUpperCase();
-}
-
-const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#ef4444"];
-function getColor(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  return COLORS[Math.abs(hash) % COLORS.length]!;
-}
-
-export function EntryList({ entries, onSelect, query }: Props) {
+export function EntryList({ entries, selectedId, onSelect, query }: Props) {
   if (entries.length === 0) {
     return (
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, color: "var(--color-text-muted)", padding: 40 }}>
-        <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--color-surface)", border: "2px dashed var(--color-border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        gap: 12, padding: 32, color: "var(--color-text-muted)",
+      }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: 18,
+          background: "var(--color-surface-2)",
+          border: "2px dashed var(--color-border-strong)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 24,
+        }}>
           {query ? "🔍" : "🔑"}
         </div>
-        <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-muted)" }}>
+        <p style={{ fontSize: 14, fontWeight: 500, textAlign: "center", color: "var(--color-text-muted)" }}>
           {query ? `"${query}" için sonuç bulunamadı` : "Henüz giriş yok"}
         </p>
-        {!query && <p style={{ fontSize: 13, color: "var(--color-text-subtle)" }}>Sağ üstteki "+ Yeni Giriş" butonuna tıklayın</p>}
+        {!query && (
+          <p style={{ fontSize: 12, color: "var(--color-text-subtle)", textAlign: "center" }}>
+            Sağ üstteki "+ Yeni" butonuna tıklayın
+          </p>
+        )}
       </div>
     );
   }
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
+    <div style={{ flex: 1, overflowY: "auto", padding: "6px 8px" }}>
       {entries.map((entry) => {
-        const color = getColor(entry.title);
+        const color   = pickColor(entry.title);
+        const initial = entry.title.charAt(0).toUpperCase();
+        const domain  = getDomain(entry.url);
+        const active  = selectedId === entry.id;
+        const favicon = entry.url ? getFavicon(entry.url) : "";
+
         return (
-          <button key={entry.id}
+          <button
+            key={entry.id}
             onClick={() => onSelect(entry)}
             style={{
-              display: "flex", alignItems: "center", gap: 12, width: "100%",
-              padding: "12px 14px", marginBottom: 4,
-              background: "var(--color-surface)", border: "1px solid var(--color-border)",
+              display: "flex", alignItems: "center", gap: 12,
+              width: "100%", padding: "10px 12px", marginBottom: 2,
+              background: active ? "var(--color-accent-light)" : "transparent",
+              border: `1.5px solid ${active ? "var(--color-accent)" : "transparent"}`,
               borderRadius: "var(--radius)", cursor: "pointer", textAlign: "left",
-              transition: "all 0.15s", boxShadow: "var(--shadow-sm)",
+              transition: "all 0.12s",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-accent)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 0 3px var(--color-accent-light)";
+              if (!active) e.currentTarget.style.background = "var(--color-surface-2)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "var(--shadow-sm)";
+              if (!active) e.currentTarget.style.background = "transparent";
             }}
           >
             {/* Icon */}
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
-              {entry.url ? (
-                <img src={getFavicon(entry.url)} alt="" width={20} height={20}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-              ) : null}
-              <span style={{ fontSize: 17, fontWeight: 700, color, display: entry.url ? "none" : "block" }}>{getInitial(entry.title)}</span>
-            </div>
+            <EntryIcon favicon={favicon} initial={initial} color={color} />
 
-            {/* Info */}
+            {/* Text */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.title}</div>
-              <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {entry.username || getDomain(entry.url)}
+              <div style={{
+                fontSize: 13.5, fontWeight: 600,
+                color: active ? "var(--color-accent-hover)" : "var(--color-text)",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {entry.title}
+              </div>
+              <div style={{
+                fontSize: 12, marginTop: 1,
+                color: "var(--color-text-subtle)",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                {entry.username || (entry.url ? domain : "—")}
               </div>
             </div>
 
-            {/* Right side */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-              {entry.favourite && <span style={{ fontSize: 14 }}>⭐</span>}
-              {entry.tags.slice(0, 2).map((t) => (
-                <span key={t} style={{ fontSize: 10, padding: "2px 7px", background: "var(--color-accent-light)", color: "var(--color-accent)", borderRadius: 100, fontWeight: 600 }}>{t}</span>
-              ))}
-              <span style={{ color: "var(--color-text-subtle)", fontSize: 16 }}>›</span>
+            {/* Right badges */}
+            <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+              {entry.favourite && (
+                <span style={{ fontSize: 12, color: "#fbbf24" }}>★</span>
+              )}
+              {entry.totpSecret && (
+                <span style={{
+                  fontSize: 9, fontWeight: 700, padding: "2px 5px",
+                  background: "var(--color-success-light)", color: "var(--color-success)",
+                  borderRadius: 4,
+                }}>2FA</span>
+              )}
             </div>
           </button>
         );
       })}
     </div>
+  );
+}
+
+// ── Entry Icon — favicon with initial fallback ────────────────────────────────
+
+function EntryIcon({ favicon, initial, color }: { favicon: string; initial: string; color: string }) {
+  return (
+    <div style={{
+      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+      background: color + "20",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      overflow: "hidden", position: "relative",
+    }}>
+      {favicon ? (
+        <FaviconImg src={favicon} fallback={initial} color={color} />
+      ) : (
+        <InitialBadge initial={initial} color={color} />
+      )}
+    </div>
+  );
+}
+
+function FaviconImg({ src, fallback, color }: { src: string; fallback: string; color: string }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      width={20}
+      height={20}
+      style={{ objectFit: "contain" }}
+      onError={(e) => {
+        const img = e.currentTarget;
+        img.style.display = "none";
+        const parent = img.parentElement;
+        if (parent) {
+          parent.innerHTML = `<span style="font-size:16px;font-weight:700;color:${color}">${fallback}</span>`;
+        }
+      }}
+    />
+  );
+}
+
+function InitialBadge({ initial, color }: { initial: string; color: string }) {
+  return (
+    <span style={{ fontSize: 16, fontWeight: 700, color }}>{initial}</span>
   );
 }

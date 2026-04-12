@@ -10,18 +10,26 @@ interface EntryEditorProps {
   onCancel: () => void;
 }
 
+// ── SVG Icons ─────────────────────────────────────────────────────────────────
+function Icon({ d, size = 14 }: { d: string; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d={d} />
+    </svg>
+  );
+}
+
+const EYE_D     = "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z";
+const EYE_OFF_D = "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22";
+const BOLT_D    = "M13 2L3 14h9l-1 8 10-12h-9l1-8z";
+const STAR_D    = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
+
 function emptyDraft(): EntryDraft {
   return {
-    title: "",
-    username: "",
-    password: "",
-    url: "",
-    additionalUrls: [],
-    notes: "",
-    tags: [],
-    folderId: null,
-    favourite: false,
-    totpSecret: null,
+    title: "", username: "", password: "", url: "",
+    additionalUrls: [], notes: "", tags: [],
+    folderId: null, favourite: false, totpSecret: null,
   };
 }
 
@@ -29,15 +37,9 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
   const [draft, setDraft] = useState<EntryDraft>(() =>
     initial
       ? {
-          title: initial.title,
-          username: initial.username,
-          password: initial.password,
-          url: initial.url,
-          additionalUrls: initial.additionalUrls,
-          notes: initial.notes,
-          tags: initial.tags,
-          folderId: initial.folderId,
-          favourite: initial.favourite,
+          title: initial.title, username: initial.username, password: initial.password,
+          url: initial.url, additionalUrls: initial.additionalUrls, notes: initial.notes,
+          tags: initial.tags, folderId: initial.folderId, favourite: initial.favourite,
           totpSecret: initial.totpSecret,
         }
       : emptyDraft(),
@@ -54,9 +56,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
 
   function addTag() {
     const tag = tagInput.trim();
-    if (tag && !draft.tags.includes(tag)) {
-      set("tags", [...draft.tags, tag]);
-    }
+    if (tag && !draft.tags.includes(tag)) set("tags", [...draft.tags, tag]);
     setTagInput("");
   }
 
@@ -66,177 +66,163 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!draft.title.trim()) { setError("Title is required."); return; }
+    if (!draft.title.trim()) { setError("Başlık zorunludur."); return; }
     setError("");
     setSaving(true);
     try {
       await onSave(draft);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save.");
+      setError(err instanceof Error ? err.message : "Kaydedilemedi.");
     } finally {
       setSaving(false);
     }
   }
 
   const fieldLabel: React.CSSProperties = {
-    display: "block",
-    fontSize: 12, fontWeight: 600,
-    color: "var(--color-text-secondary)",
-    letterSpacing: "0.05em", textTransform: "uppercase",
-    marginBottom: 6,
+    display: "block", fontSize: 11, fontWeight: 700,
+    color: "var(--color-text-subtle)", letterSpacing: "0.06em",
+    textTransform: "uppercase", marginBottom: 6,
   };
 
   const fieldInput: React.CSSProperties = {
-    width: "100%", padding: "10px 12px",
+    width: "100%", padding: "9px 12px",
     border: "1.5px solid var(--color-border)",
-    borderRadius: 8, background: "#fff",
-    color: "var(--color-text)", fontSize: 14,
+    borderRadius: 7, background: "var(--color-surface-2)",
+    color: "var(--color-text)", fontSize: 13.5,
     outline: "none", transition: "border-color 0.15s",
   };
 
   const focusHandlers = {
-    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.currentTarget.style.borderColor = "var(--color-accent)"; },
-    onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.currentTarget.style.borderColor = "var(--color-border)"; },
+    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      e.currentTarget.style.borderColor = "var(--color-accent)";
+    },
+    onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      e.currentTarget.style.borderColor = "var(--color-border)";
+    },
   };
 
   return (
-    <div
-      style={{
-        flex: 1, height: "100%",
-        display: "flex", flexDirection: "column",
-        background: "var(--color-bg)", overflow: "hidden",
-      }}
-    >
+    <div style={{
+      flex: 1, height: "100%",
+      display: "flex", flexDirection: "column",
+      background: "var(--color-bg)", overflow: "hidden",
+    }}>
       {/* Header */}
-      <div
-        style={{
-          padding: "16px 24px",
-          background: "#fff",
-          borderBottom: "1px solid var(--color-border)",
-          display: "flex", alignItems: "center", gap: 12,
-        }}
-      >
+      <div style={{
+        padding: "14px 20px",
+        background: "var(--color-surface)",
+        borderBottom: "1px solid var(--color-border)",
+        display: "flex", alignItems: "center", gap: 12,
+      }}>
         <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: 17, fontWeight: 700, color: "var(--color-text)" }}>
-            {initial ? "Edit Item" : "New Item"}
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--color-text)" }}>
+            {initial ? "Girişi düzenle" : "Yeni giriş"}
           </h2>
         </div>
         <button
           onClick={onCancel}
           style={{
-            padding: "7px 14px",
+            padding: "6px 14px",
             background: "transparent",
-            border: "1px solid var(--color-border)",
-            borderRadius: 8, color: "var(--color-text-secondary)",
+            border: "1.5px solid var(--color-border)",
+            borderRadius: 7, color: "var(--color-text-secondary)",
             fontSize: 13, fontWeight: 500, cursor: "pointer",
             transition: "all 0.15s",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-bg)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-surface-2)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         >
-          Cancel
+          İptal
         </button>
         <button
-          onClick={handleSave}
-          disabled={saving}
+          onClick={handleSave} disabled={saving}
           style={{
-            padding: "7px 20px",
-            background: saving ? "rgba(99,102,241,0.4)" : "var(--color-accent)",
-            border: "none", borderRadius: 8,
-            color: "#fff", fontSize: 13, fontWeight: 700,
-            cursor: saving ? "not-allowed" : "pointer",
+            padding: "6px 18px",
+            background: saving ? "var(--color-surface-3)" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            border: "none", borderRadius: 7, color: "#fff",
+            fontSize: 13, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer",
+            boxShadow: saving ? "none" : "0 2px 8px rgba(99,102,241,0.3)",
             transition: "all 0.15s",
           }}
         >
-          {saving ? "Saving…" : "Save"}
+          {saving ? "Kaydediliyor…" : "Kaydet"}
         </button>
       </div>
 
       {/* Form */}
       <form
         onSubmit={handleSave}
-        style={{ flex: 1, overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}
+        style={{ flex: 1, overflowY: "auto", padding: "20px 20px", display: "flex", flexDirection: "column", gap: 14 }}
       >
         {error && (
           <div style={{
-            padding: "10px 14px",
+            padding: "9px 12px",
             background: "var(--color-danger-light)",
-            border: "1px solid rgba(239,68,68,0.3)",
-            borderRadius: 8, color: "var(--color-danger)", fontSize: 13,
+            border: "1px solid var(--color-danger)",
+            borderRadius: 7, color: "var(--color-danger)", fontSize: 12.5,
           }}>
             {error}
           </div>
         )}
 
         {/* Favourite toggle */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             type="button"
             onClick={() => set("favourite", !draft.favourite)}
             style={{
               padding: "6px 14px",
-              background: draft.favourite ? "#fef9c3" : "#fff",
-              border: `1.5px solid ${draft.favourite ? "#fde047" : "var(--color-border)"}`,
-              borderRadius: 8, fontSize: 13, cursor: "pointer",
-              color: draft.favourite ? "#92400e" : "var(--color-text-secondary)",
+              background: draft.favourite ? "rgba(251,191,36,0.12)" : "var(--color-surface-2)",
+              border: `1.5px solid ${draft.favourite ? "#fbbf24" : "var(--color-border)"}`,
+              borderRadius: 7, fontSize: 13, cursor: "pointer",
+              color: draft.favourite ? "#fbbf24" : "var(--color-text-secondary)",
               display: "flex", alignItems: "center", gap: 6,
               transition: "all 0.15s",
             }}
           >
-            {draft.favourite ? "⭐" : "☆"} {draft.favourite ? "Favourite" : "Add to Favourites"}
+            <Icon d={STAR_D} size={13} />
+            {draft.favourite ? "Favorilerde" : "Favoriye ekle"}
           </button>
         </div>
 
         <div>
-          <label style={fieldLabel}>Title *</label>
-          <input
-            type="text" value={draft.title}
+          <label style={fieldLabel}>Başlık *</label>
+          <input type="text" value={draft.title}
             onChange={(e) => set("title", e.target.value)}
-            placeholder="e.g. Gmail" required autoFocus
-            style={fieldInput} {...focusHandlers}
-          />
+            placeholder="örn. Gmail" required autoFocus
+            style={fieldInput} {...focusHandlers} />
         </div>
 
         <div>
-          <label style={fieldLabel}>Username / Email</label>
-          <input
-            type="text" value={draft.username}
+          <label style={fieldLabel}>Kullanıcı adı / E-posta</label>
+          <input type="text" value={draft.username}
             onChange={(e) => set("username", e.target.value)}
-            placeholder="username@example.com"
-            style={fieldInput} {...focusHandlers}
-          />
+            placeholder="kullanici@example.com"
+            style={fieldInput} {...focusHandlers} />
         </div>
 
         <div>
-          <label style={fieldLabel}>Password</label>
+          <label style={fieldLabel}>Şifre</label>
           <div style={{ position: "relative" }}>
             <input
               type={showPw ? "text" : "password"} value={draft.password}
               onChange={(e) => set("password", e.target.value)}
               placeholder="••••••••"
-              style={{ ...fieldInput, paddingRight: 90, fontFamily: showPw ? "inherit" : "monospace" }}
+              style={{ ...fieldInput, paddingRight: 72 }}
               {...focusHandlers}
             />
             <div style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 4 }}>
-              <button
-                type="button" onClick={() => setShowPw(!showPw)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 15, opacity: 0.5 }}
-              >
-                {showPw ? "🙈" : "👁"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowGenerator(!showGenerator)}
-                title="Generate password"
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, opacity: 0.6 }}
-              >
-                🎲
-              </button>
+              <IconBtn onClick={() => setShowPw(!showPw)} title={showPw ? "Gizle" : "Göster"}>
+                <Icon d={showPw ? EYE_OFF_D : EYE_D} size={13} />
+              </IconBtn>
+              <IconBtn onClick={() => setShowGenerator(!showGenerator)} title="Şifre üret">
+                <Icon d={BOLT_D} size={13} />
+              </IconBtn>
             </div>
           </div>
 
           {showGenerator && (
-            <div style={{ marginTop: 10, padding: 16, background: "#fff", border: "1px solid var(--color-border)", borderRadius: 10 }}>
+            <div style={{ marginTop: 10, padding: 14, background: "var(--color-surface-2)", border: "1px solid var(--color-border)", borderRadius: 10 }}>
               <PasswordGenerator
                 onUse={(pw) => { set("password", pw); setShowGenerator(false); setShowPw(true); }}
               />
@@ -246,61 +232,49 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
 
         <div>
           <label style={fieldLabel}>Website URL</label>
-          <input
-            type="url" value={draft.url}
+          <input type="url" value={draft.url}
             onChange={(e) => set("url", e.target.value)}
             placeholder="https://example.com"
-            style={fieldInput} {...focusHandlers}
-          />
+            style={fieldInput} {...focusHandlers} />
         </div>
 
         <div>
-          <label style={fieldLabel}>TOTP Secret (2FA)</label>
-          <input
-            type="text" value={draft.totpSecret ?? ""}
+          <label style={fieldLabel}>TOTP Anahtarı (2FA)</label>
+          <input type="text" value={draft.totpSecret ?? ""}
             onChange={(e) => set("totpSecret", e.target.value || null)}
-            placeholder="Base32 secret (optional)"
+            placeholder="Base32 anahtarı (opsiyonel)"
             style={{ ...fieldInput, fontFamily: "monospace" }}
-            {...focusHandlers}
-          />
+            {...focusHandlers} />
         </div>
 
         <div>
-          <label style={fieldLabel}>Notes</label>
+          <label style={fieldLabel}>Notlar</label>
           <textarea
             value={draft.notes}
             onChange={(e) => set("notes", e.target.value)}
-            placeholder="Any additional notes…"
+            placeholder="Ek notlar…"
             rows={4}
-            style={{
-              ...fieldInput,
-              resize: "vertical",
-              fontFamily: "inherit",
-              lineHeight: 1.5,
-            }}
+            style={{ ...fieldInput, resize: "vertical", fontFamily: "inherit", lineHeight: 1.5 }}
             onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-accent)"; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; }}
           />
         </div>
 
         <div>
-          <label style={fieldLabel}>Tags</label>
+          <label style={fieldLabel}>Etiketler</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
             {draft.tags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  padding: "3px 10px",
-                  background: "var(--color-accent-light)",
-                  color: "var(--color-accent)",
-                  borderRadius: 20, fontSize: 12, fontWeight: 500,
-                  display: "flex", alignItems: "center", gap: 4,
-                }}
-              >
-                {tag}
+              <span key={tag} style={{
+                padding: "3px 10px",
+                background: "var(--color-accent-light)",
+                color: "var(--color-accent-hover)",
+                borderRadius: 20, fontSize: 12, fontWeight: 500,
+                display: "flex", alignItems: "center", gap: 4,
+              }}>
+                #{tag}
                 <button
                   type="button" onClick={() => removeTag(tag)}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-accent)", fontSize: 14, padding: 0, lineHeight: 1 }}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-accent-hover)", fontSize: 14, padding: 0, lineHeight: 1 }}
                 >
                   ×
                 </button>
@@ -312,7 +286,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
               type="text" value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
-              placeholder="Add tag…"
+              placeholder="Etiket ekle…"
               style={{ ...fieldInput, flex: 1 }}
               {...focusHandlers}
             />
@@ -322,15 +296,38 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
                 padding: "8px 14px",
                 background: "var(--color-accent-light)",
                 border: "1px solid var(--color-accent)",
-                borderRadius: 8, color: "var(--color-accent)",
+                borderRadius: 7, color: "var(--color-accent-hover)",
                 fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}
             >
-              Add
+              Ekle
             </button>
           </div>
         </div>
       </form>
     </div>
+  );
+}
+
+function IconBtn({ onClick, title, children }: { onClick: () => void; title?: string; children: React.ReactNode }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      type="button" onClick={onClick} title={title}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        width: 26, height: 26, padding: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: hover ? "var(--color-surface-3)" : "transparent",
+        border: "1px solid",
+        borderColor: hover ? "var(--color-accent)" : "var(--color-border)",
+        borderRadius: 5, cursor: "pointer",
+        color: hover ? "var(--color-accent)" : "var(--color-text-secondary)",
+        transition: "all 0.1s",
+      }}
+    >
+      {children}
+    </button>
   );
 }
