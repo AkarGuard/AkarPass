@@ -134,7 +134,7 @@ export function LoginScreen({ authService, vaultService, navigate }: LoginScreen
           </div>
         </div>
 
-        <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5 }}>v0.1.0 · MIT License</p>
+        <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5 }}>v0.2.1 · MIT License</p>
       </div>
 
       {/* ── Right: form panel ── */}

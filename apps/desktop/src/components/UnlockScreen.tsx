@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 
 interface VaultServiceLike {
   listLocalVaults(): Promise<{ id: string; name: string }[]>;
+  pullVaultsFromCloud(): Promise<number>;
   unlockVault(vaultId: string, masterPassword: string): Promise<boolean>;
 }
 
@@ -42,13 +43,19 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
   const EYE_OFF_D = "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22";
 
   useEffect(() => {
-    vaultService
-      .listLocalVaults()
-      .then((list) => {
+    (async () => {
+      try {
+        let list = await vaultService.listLocalVaults();
+        if (list.length === 0) {
+          await vaultService.pullVaultsFromCloud();
+          list = await vaultService.listLocalVaults();
+        }
         setVaults(list);
         if (list.length > 0 && list[0]) setSelectedVaultId(list[0].id);
-      })
-      .catch(() => {});
+      } catch {
+        /* ignore — user can still sign out */
+      }
+    })();
   }, [vaultService]);
 
   async function handleUnlock(e: React.FormEvent) {
@@ -126,7 +133,7 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
           </p>
         </div>
 
-        <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5 }}>v0.1.0 · MIT License</p>
+        <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5 }}>v0.2.1 · MIT License</p>
       </div>
 
       {/* ── Right: form panel ── */}
