@@ -1,50 +1,6 @@
 use tauri::Manager;
 
-/// Chrome extension ID — derived deterministically from the RSA public key used
-/// to sign the bundled extension.crx. If you rebuild the extension with a
-/// different key, regenerate this ID and rebuild the desktop app.
-const EXT_ID: &str = "okpoibgkhnbffhagpnhjnocckmofojaj";
-
-/// Install the bundled AkarPass Chrome extension via Windows registry.
-/// Chrome will auto-install the extension on its next launch.
-#[tauri::command]
-async fn install_chrome_extension(app: tauri::AppHandle) -> Result<(), String> {
-    #[cfg(windows)]
-    {
-        use std::fs;
-
-        // 1. Find the bundled CRX in the resource directory
-        let res_dir = app.path().resource_dir().map_err(|e| e.to_string())?;
-        let crx_src = res_dir.join("extension.crx");
-
-        // 2. Copy CRX to a stable location in LocalAppData
-        let local_app_data = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
-        fs::create_dir_all(&local_app_data).map_err(|e| e.to_string())?;
-        let crx_dest = local_app_data.join("extension.crx");
-        fs::copy(&crx_src, &crx_dest).map_err(|e| {
-            format!("CRX kopyalanamadı: {} → {}: {}", crx_src.display(), crx_dest.display(), e)
-        })?;
-
-        // 3. Write the Windows registry key that tells Chrome to install the extension
-        use winreg::enums::{HKEY_CURRENT_USER, KEY_WRITE};
-        use winreg::RegKey;
-        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-        let key_path = format!("SOFTWARE\\Google\\Chrome\\Extensions\\{}", EXT_ID);
-        let (key, _) = hkcu
-            .create_subkey_with_flags(&key_path, KEY_WRITE)
-            .map_err(|e| format!("Registry yazılamadı: {}", e))?;
-        let crx_path = crx_dest.to_string_lossy().into_owned();
-        key.set_value("path", &crx_path).map_err(|e| e.to_string())?;
-        key.set_value("version", &"0.1.0").map_err(|e| e.to_string())?;
-
-        Ok(())
-    }
-    #[cfg(not(windows))]
-    {
-        let _ = app;
-        Err("Bu özellik sadece Windows'ta destekleniyor.".into())
-    }
-}
+mod autofill;
 
 /// Tauri command: return the app data directory path for secure file storage.
 #[tauri::command]
@@ -112,12 +68,20 @@ async fn list_vaults(app: tauri::AppHandle) -> Result<Vec<String>, String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .setup(|app| {
+            if let Err(err) = autofill::init(&app.handle().clone()) {
+                eprintln!("autofill init failed: {err}");
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_data_dir,
             write_vault,
             read_vault,
             list_vaults,
-            install_chrome_extension,
+            autofill::autofill_get_target,
+            autofill::autofill_type_credentials,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

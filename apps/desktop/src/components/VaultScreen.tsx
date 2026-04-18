@@ -6,7 +6,7 @@ import { EntryList } from "./EntryList.js";
 import { EntryDetail } from "./EntryDetail.js";
 import { EntryEditor } from "./EntryEditor.js";
 import { PasswordGenerator } from "./PasswordGenerator.js";
-import { ExtensionBanner } from "./ExtensionBanner.js";
+import { AutofillBanner } from "./AutofillBanner.js";
 
 type SidebarView = "all" | "favourites" | "recent" | "passwords" | "notes" | "trash" | string;
 type RightPanel = "detail" | "editor" | "generator" | null;
@@ -162,7 +162,7 @@ export function VaultScreen({ vaultService, navigate }: VaultScreenProps) {
 
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <ExtensionBanner />
+      <AutofillBanner />
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
       {/* Sidebar */}
       <Sidebar

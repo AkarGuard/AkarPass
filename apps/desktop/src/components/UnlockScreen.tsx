@@ -133,7 +133,7 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
           </p>
         </div>
 
-        <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5 }}>v0.2.2 · MIT License</p>
+        <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 10.5 }}>v0.3.0 · MIT License</p>
       </div>
 
       {/* ── Right: form panel ── */}

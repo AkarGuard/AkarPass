@@ -9,7 +9,7 @@
 | Passive network eavesdropper | Intercept HTTPS traffic | TLS + HSTS. All data encrypted before transmission. |
 | Compromised Supabase server | Read database rows | Zero-knowledge: only encrypted blobs stored |
 | Supabase employee / insider | Full database access | Same as above — no plaintext ever reaches server |
-| Malicious browser extension | Read page memory | Extension isolated via Shadow DOM + service worker |
+| Malicious browser extension | Read page memory | Vault never lives in the browser; autofill is driven from the native desktop app |
 | XSS attacker | Inject scripts | CSP headers, no eval(), no innerHTML with user data |
 | CSRF attacker | Forge requests | Supabase JWT (Bearer token) required — cookie-free |
 | Nation-state (future quantum) | Break classical crypto | ML-KEM-768 post-quantum KEM layer |
@@ -77,8 +77,6 @@ somehow compromised, other vaults remain unaffected.
 
 ### XSS Prevention
 - All user-supplied text rendered via React (auto-escapes)
-- Extension popup uses `escapeHtml()` before any DOM insertion
-- Content script uses `textContent` / `nativeInputValueSet` — never `innerHTML` for credential data
 - CSP headers block inline scripts and `eval()`
 
 ### URL Validation
@@ -95,21 +93,32 @@ somehow compromised, other vaults remain unaffected.
 
 ---
 
-## Browser Extension Security
+## Native Autofill Security
 
-### Manifest V3 Security Model
-- Background code runs in a service worker (isolated from page JS)
-- Content scripts are isolated via Shadow DOM for the autofill overlay
-- Passwords are **never** passed through content script messages to pages
-  - Content script sends `AUTOFILL` request to background SW
-  - Background SW retrieves the password from the locked vault
-  - Background SW sends the password to the content script for injection
-  - The password is never stored in the content script's scope beyond the injection call
+The desktop app (Tauri) replaces a browser extension for autofill. It uses a
+user-configurable global hotkey (default `Ctrl+Shift+L`) to:
 
-### Message Validation
-- All extension messages are typed (`ExtensionMessage` union)
-- No dynamic code execution (no `eval`, no `new Function`)
-- Extension CSP blocks external script sources
+1. Read the active browser's URL via platform accessibility APIs
+   (UIAutomation on Windows, AX API on macOS, AT-SPI / X11 on Linux).
+2. Find matching vault entries in memory (vault must be unlocked).
+3. Inject `username + TAB + password` into the focused field via synthetic
+   keystrokes (`enigo`).
+
+### Properties
+- Credentials never leave the Tauri process memory until the moment they are
+  typed into the focused window — no browser IPC, no page-script exposure.
+- No extension = no Chrome Web Store lock-in, no CRX signature warnings,
+  no `HKCU\...\Extensions` registry writes.
+
+### Known limitations
+- Synthetic keystrokes are visible to any app on the system that has
+  input-monitoring rights (keyloggers, AV). The threat surface is the same
+  as typing the password by hand.
+- On Linux Wayland, keystroke injection is blocked by the compositor;
+  the app falls back to clipboard paste (auto-cleared after 15 s).
+- Browser URL extraction may fail in Firefox if accessibility services are
+  disabled (`accessibility.force_disabled`), and in Chrome PWA windows that
+  hide the address bar. In these cases we match on window title / app name.
 
 ---
 
@@ -140,13 +149,12 @@ wipeAll(masterKey, dek, sharedSecret, privateKeyBytes);
 ## Session Security
 
 ### Auto-lock
-- Default: 15 minutes (extension), 30 minutes (web)
+- Default: 30 minutes (web and desktop)
 - Configurable per user
 - Triggers on:
   - Inactivity timeout
   - Browser tab hidden (debounced)
   - Manual lock button
-  - Page navigation (extension)
 
 ### Supabase Session
 - JWT expires after 1 hour, auto-refreshed
@@ -159,7 +167,7 @@ wipeAll(masterKey, dek, sharedSecret, privateKeyBytes);
 
 - HTTPS enforced via HSTS: `max-age=63072000; includeSubDomains; preload`
 - Supabase connections are HTTPS + WSS only
-- Extension `host_permissions` limited to `https://*.supabase.co/*`
+- Desktop app CSP limits `connect-src` to `https://*.supabase.co` and `wss://*.supabase.co`
 
 ---
 
@@ -188,7 +196,7 @@ Notable intentional **exclusions**:
 If you find a security vulnerability in AkarPass, please report it responsibly:
 
 1. **Do not** open a public GitHub issue
-2. Email: security@akarguard.net
+2. Email: security@akarpass.io
 3. Include: description, steps to reproduce, impact assessment
 4. We will acknowledge within 48 hours and aim to patch within 7 days
 
@@ -199,12 +207,10 @@ If you find a security vulnerability in AkarPass, please report it responsibly:
 1. **JavaScript memory**: Cannot guarantee complete key material erasure due to GC.
    Mitigated by immediate zeroing; use Tauri desktop for stronger guarantees.
 
-2. **Browser storage**: IndexedDB is accessible to other extensions with `scripting`
-   permission on the same origin. The encrypted blob is safe; unlock state is not persisted.
+2. **Browser storage**: IndexedDB (web app) is accessible to other extensions
+   with `scripting` permission on the same origin. The encrypted blob is safe;
+   unlock state is not persisted.
 
-3. **Extension service worker**: MV3 SWs can be killed. Vault is locked on revival.
-   This is a security feature (forced re-authentication) but may surprise users.
-
-4. **Master password recovery**: By design, there is NO recovery mechanism.
+3. **Master password recovery**: By design, there is NO recovery mechanism.
    If you forget your master password, your vault data is permanently inaccessible.
    Encourage users to store their master password in a secure backup location.

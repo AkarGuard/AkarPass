@@ -1,6 +1,6 @@
 [package]
 name = "akarpass-desktop"
-version = "0.2.2"
+version = "0.3.0"
 description = "AkarPass Desktop"
 authors = ["AkarPass Team"]
 edition = "2021"
@@ -21,11 +21,21 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2.1.1", features = [] }
 tauri-plugin-store = "2.1.0"
 tauri-plugin-opener = "2"
+tauri-plugin-global-shortcut = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+# Cross-platform synthetic keystroke injection for autofill.
+enigo = "0.2"
 
-[target.'cfg(windows)'.dependencies]
-winreg = "0.52"
+# Windows-only: UIAutomation for reading the focused browser's URL.
+[target.'cfg(target_os = "windows")'.dependencies]
+uiautomation = "0.16"
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_ProcessStatus",
+    "Win32_System_Threading",
+] }
 
 [profile.release]
 # Security: strip debug symbols from release builds

@@ -16,8 +16,8 @@
 ## 1. Clone & Install
 
 ```bash
-git clone https://github.com/AkarGuard/AkarPass.git
-cd AkarPass
+git clone https://github.com/your-org/akarpass
+cd akarpass
 
 # Install dependencies (frozen lockfile — no unexpected updates)
 pnpm install --frozen-lockfile
@@ -88,21 +88,7 @@ pnpm --filter @akarpass/web dev
 
 ---
 
-## 5. Build the Browser Extension
-
-```bash
-pnpm --filter @akarpass/extension build
-```
-
-Load unpacked extension in Chrome:
-1. Go to `chrome://extensions`
-2. Enable "Developer mode"
-3. Click "Load unpacked"
-4. Select `apps/extension/dist`
-
----
-
-## 6. Build the Desktop App (Tauri)
+## 5. Build the Desktop App (Tauri)
 
 ```bash
 # Install Rust: https://rustup.rs
@@ -117,7 +103,7 @@ pnpm --filter @akarpass/desktop dev
 
 ---
 
-## 7. Run the Mobile App (React Native)
+## 6. Run the Mobile App (React Native)
 
 ```bash
 # iOS (macOS only)
@@ -129,7 +115,7 @@ pnpm --filter @akarpass/mobile android
 
 ---
 
-## 8. Build All Packages
+## 7. Build All Packages
 
 ```bash
 # Build all packages and apps in correct order (via Turborepo)

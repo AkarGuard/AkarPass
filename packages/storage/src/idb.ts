@@ -1,5 +1,5 @@
 /**
- * IndexedDB storage driver for web and browser extension.
+ * IndexedDB storage driver for the web app.
  *
  * Uses the native IndexedDB API (no wrapper library).
  * Supply chain: zero external dependencies.
@@ -102,7 +102,7 @@ function idbClearStore(db: IDBDatabase, storeName: string): Promise<void> {
 
 /**
  * IndexedDB-backed storage driver.
- * Implements StorageDriver for web (and extension popup/background).
+ * Implements StorageDriver for the web app (IndexedDB-backed).
  */
 export class IdbStorageDriver implements StorageDriver {
   private db: IDBDatabase | null = null;
