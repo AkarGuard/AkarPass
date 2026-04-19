@@ -7,6 +7,7 @@ import { AppShell } from "./components/AppShell.js";
 import { LoginScreen } from "./components/LoginScreen.js";
 import { UnlockScreen } from "./components/UnlockScreen.js";
 import { VaultScreen } from "./components/VaultScreen.js";
+import { LanguageProvider } from "./lib/i18n/index.js";
 import "./globals.css";
 
 const authService = {
@@ -69,13 +70,15 @@ function RootRedirect() {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/unlock" element={<UnlockPage />} />
-        <Route path="/vault" element={<VaultPage />} />
-      </Routes>
-    </BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/unlock" element={<UnlockPage />} />
+          <Route path="/vault" element={<VaultPage />} />
+        </Routes>
+      </BrowserRouter>
+    </LanguageProvider>
   </React.StrictMode>,
 );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useT } from "../lib/i18n/index.js";
 
 interface VaultServiceLike {
   listLocalVaults(): Promise<{ id: string; name: string }[]>;
@@ -32,6 +33,7 @@ const LABEL: React.CSSProperties = {
 };
 
 export function UnlockScreen({ authService, vaultService, navigate }: UnlockScreenProps) {
+  const t = useT();
   const [vaults, setVaults] = useState<{ id: string; name: string }[]>([]);
   const [selectedVaultId, setSelectedVaultId] = useState("");
   const [masterPassword, setMasterPassword] = useState("");
@@ -67,10 +69,10 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
       if (ok) {
         navigate("/vault");
       } else {
-        setError("Hatalı master şifre.");
+        setError(t("unlock.error.wrongPassword"));
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Vault açılamadı.");
+      setError(err instanceof Error ? err.message : t("unlock.error.generic"));
     } finally {
       setLoading(false);
     }
@@ -124,12 +126,12 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
           </div>
 
           <h1 style={{ color: "#fff", fontSize: 21, fontWeight: 700, marginBottom: 8 }}>
-            Vault Kilitli
+            {t("unlock.title")}
           </h1>
           <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, lineHeight: 1.6 }}>
             {activeVault
-              ? `"${activeVault.name}" vault'unu açmak için master şifrenizi girin`
-              : "Devam etmek için master şifrenizi girin"}
+              ? t("unlock.heroSubtitle", { name: activeVault.name })
+              : t("unlock.heroSubtitleNoVault")}
           </p>
         </div>
 
@@ -144,16 +146,16 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
       }}>
         <div style={{ width: "100%", maxWidth: 340 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text)", marginBottom: 6 }}>
-            Vault'u aç
+            {t("unlock.formTitle")}
           </h2>
           <p style={{ fontSize: 13, color: "var(--color-text-subtle)", marginBottom: 28 }}>
-            Sadece master şifreniz şifreyi çözebilir
+            {t("unlock.formSubtitle")}
           </p>
 
           <form onSubmit={handleUnlock} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {vaults.length > 1 && (
               <div>
-                <label style={LABEL}>Vault seç</label>
+                <label style={LABEL}>{t("unlock.selectVault")}</label>
                 <select
                   value={selectedVaultId}
                   onChange={(e) => setSelectedVaultId(e.target.value)}
@@ -187,13 +189,13 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
                   <div style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text)" }}>
                     {activeVault.name}
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--color-text-subtle)" }}>Seçili vault</div>
+                  <div style={{ fontSize: 11, color: "var(--color-text-subtle)" }}>{t("unlock.selectedVault")}</div>
                 </div>
               </div>
             )}
 
             <div>
-              <label style={LABEL}>Master Şifre</label>
+              <label style={LABEL}>{t("unlock.field.masterPassword")}</label>
               <div style={{ position: "relative" }}>
                 <input
                   type={showPw ? "text" : "password"}
@@ -244,7 +246,7 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
                 boxShadow: loading ? "none" : "0 4px 12px rgba(99,102,241,0.3)",
               }}
             >
-              {loading ? "Açılıyor…" : "Vault'u Aç"}
+              {loading ? t("unlock.unlocking") : t("unlock.submit")}
             </button>
 
             <button type="button" onClick={handleSignOut}
@@ -258,7 +260,7 @@ export function UnlockScreen({ authService, vaultService, navigate }: UnlockScre
               onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-surface-2)"; e.currentTarget.style.color = "var(--color-text-muted)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--color-text-subtle)"; }}
             >
-              Çıkış yap
+              {t("unlock.signOut")}
             </button>
           </form>
         </div>

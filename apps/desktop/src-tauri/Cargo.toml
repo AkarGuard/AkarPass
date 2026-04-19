@@ -26,6 +26,10 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # Cross-platform synthetic keystroke injection for autofill.
 enigo = "0.2"
+# Clipboard paste for autofill: bypasses keyboard-layout and browser
+# autocomplete-dropdown races that occur when enigo types char-by-char.
+# Content is written to the clipboard, pasted via Ctrl+V, then restored.
+arboard = "3.4"
 
 # Windows-only: UIAutomation for reading the focused browser's URL.
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -33,6 +37,7 @@ uiautomation = "0.16"
 windows = { version = "0.58", features = [
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Com",
     "Win32_System_ProcessStatus",
     "Win32_System_Threading",
 ] }

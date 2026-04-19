@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import type { VaultEntry } from "@akarpass/core";
 import { PasswordGenerator } from "./PasswordGenerator.js";
+import { useT } from "../lib/i18n/index.js";
 
 type EntryDraft = Omit<VaultEntry, "id" | "createdAt" | "updatedAt" | "deletedAt">;
 
@@ -34,6 +35,7 @@ function emptyDraft(): EntryDraft {
 }
 
 export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
+  const t = useT();
   const [draft, setDraft] = useState<EntryDraft>(() =>
     initial
       ? {
@@ -66,13 +68,13 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!draft.title.trim()) { setError("Başlık zorunludur."); return; }
+    if (!draft.title.trim()) { setError(t("entryEditor.error.titleRequired")); return; }
     setError("");
     setSaving(true);
     try {
       await onSave(draft);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Kaydedilemedi.");
+      setError(err instanceof Error ? err.message : t("entryEditor.error.save"));
     } finally {
       setSaving(false);
     }
@@ -116,7 +118,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
       }}>
         <div style={{ flex: 1 }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--color-text)" }}>
-            {initial ? "Girişi düzenle" : "Yeni giriş"}
+            {initial ? t("entryEditor.titleEdit") : t("entryEditor.titleNew")}
           </h2>
         </div>
         <button
@@ -132,7 +134,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-surface-2)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         >
-          İptal
+          {t("entryEditor.cancel")}
         </button>
         <button
           onClick={handleSave} disabled={saving}
@@ -145,7 +147,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
             transition: "all 0.15s",
           }}
         >
-          {saving ? "Kaydediliyor…" : "Kaydet"}
+          {saving ? t("entryEditor.saving") : t("entryEditor.save")}
         </button>
       </div>
 
@@ -181,28 +183,28 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
             }}
           >
             <Icon d={STAR_D} size={13} />
-            {draft.favourite ? "Favorilerde" : "Favoriye ekle"}
+            {draft.favourite ? t("entryEditor.isFavourite") : t("entryEditor.addFavourite")}
           </button>
         </div>
 
         <div>
-          <label style={fieldLabel}>Başlık *</label>
+          <label style={fieldLabel}>{t("entryEditor.field.title")}</label>
           <input type="text" value={draft.title}
             onChange={(e) => set("title", e.target.value)}
-            placeholder="örn. Gmail" required autoFocus
+            placeholder={t("entryEditor.field.titlePlaceholder")} required autoFocus
             style={fieldInput} {...focusHandlers} />
         </div>
 
         <div>
-          <label style={fieldLabel}>Kullanıcı adı / E-posta</label>
+          <label style={fieldLabel}>{t("entryEditor.field.username")}</label>
           <input type="text" value={draft.username}
             onChange={(e) => set("username", e.target.value)}
-            placeholder="kullanici@example.com"
+            placeholder={t("entryEditor.field.usernamePlaceholder")}
             style={fieldInput} {...focusHandlers} />
         </div>
 
         <div>
-          <label style={fieldLabel}>Şifre</label>
+          <label style={fieldLabel}>{t("entryEditor.field.password")}</label>
           <div style={{ position: "relative" }}>
             <input
               type={showPw ? "text" : "password"} value={draft.password}
@@ -212,10 +214,10 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
               {...focusHandlers}
             />
             <div style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 4 }}>
-              <IconBtn onClick={() => setShowPw(!showPw)} title={showPw ? "Gizle" : "Göster"}>
+              <IconBtn onClick={() => setShowPw(!showPw)} title={showPw ? t("entryDetail.hide") : t("entryDetail.show")}>
                 <Icon d={showPw ? EYE_OFF_D : EYE_D} size={13} />
               </IconBtn>
-              <IconBtn onClick={() => setShowGenerator(!showGenerator)} title="Şifre üret">
+              <IconBtn onClick={() => setShowGenerator(!showGenerator)} title={t("entryEditor.generatePw")}>
                 <Icon d={BOLT_D} size={13} />
               </IconBtn>
             </div>
@@ -231,7 +233,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
         </div>
 
         <div>
-          <label style={fieldLabel}>Website URL</label>
+          <label style={fieldLabel}>{t("entryEditor.field.url")}</label>
           <input type="url" value={draft.url}
             onChange={(e) => set("url", e.target.value)}
             placeholder="https://example.com"
@@ -239,20 +241,20 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
         </div>
 
         <div>
-          <label style={fieldLabel}>TOTP Anahtarı (2FA)</label>
+          <label style={fieldLabel}>{t("entryEditor.field.totp")}</label>
           <input type="text" value={draft.totpSecret ?? ""}
             onChange={(e) => set("totpSecret", e.target.value || null)}
-            placeholder="Base32 anahtarı (opsiyonel)"
+            placeholder={t("entryEditor.field.totpPlaceholder")}
             style={{ ...fieldInput, fontFamily: "monospace" }}
             {...focusHandlers} />
         </div>
 
         <div>
-          <label style={fieldLabel}>Notlar</label>
+          <label style={fieldLabel}>{t("entryEditor.field.notes")}</label>
           <textarea
             value={draft.notes}
             onChange={(e) => set("notes", e.target.value)}
-            placeholder="Ek notlar…"
+            placeholder={t("entryEditor.field.notesPlaceholder")}
             rows={4}
             style={{ ...fieldInput, resize: "vertical", fontFamily: "inherit", lineHeight: 1.5 }}
             onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-accent)"; }}
@@ -261,7 +263,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
         </div>
 
         <div>
-          <label style={fieldLabel}>Etiketler</label>
+          <label style={fieldLabel}>{t("entryEditor.field.tags")}</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
             {draft.tags.map((tag) => (
               <span key={tag} style={{
@@ -286,7 +288,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
               type="text" value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
-              placeholder="Etiket ekle…"
+              placeholder={t("entryEditor.field.tagPlaceholder")}
               style={{ ...fieldInput, flex: 1 }}
               {...focusHandlers}
             />
@@ -300,7 +302,7 @@ export function EntryEditor({ initial, onSave, onCancel }: EntryEditorProps) {
                 fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}
             >
-              Ekle
+              {t("entryEditor.addTag")}
             </button>
           </div>
         </div>

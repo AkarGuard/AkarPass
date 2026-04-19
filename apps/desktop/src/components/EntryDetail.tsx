@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import type { VaultEntry } from "@akarpass/core";
+import { useT, useLanguage } from "../lib/i18n/index.js";
 
 interface EntryDetailProps {
   entry: VaultEntry;
@@ -51,6 +52,7 @@ function FieldRow({
   secret?: boolean;
   monospace?: boolean;
 }) {
+  const t = useT();
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -95,11 +97,11 @@ function FieldRow({
         </div>
         <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
           {secret && (
-            <IconBtn onClick={() => setRevealed(!revealed)} title={revealed ? "Gizle" : "Göster"}>
+            <IconBtn onClick={() => setRevealed(!revealed)} title={revealed ? t("entryDetail.hide") : t("entryDetail.show")}>
               <SvgIcon d={revealed ? EYE_OFF_D : EYE_D} />
             </IconBtn>
           )}
-          <IconBtn onClick={copy} title="Kopyala" success={copied}>
+          <IconBtn onClick={copy} title={t("entryDetail.copy")} success={copied}>
             <SvgIcon d={copied ? CHECK_D : COPY_D} />
           </IconBtn>
         </div>
@@ -139,6 +141,8 @@ function IconBtn({
 }
 
 export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: EntryDetailProps) {
+  const t = useT();
+  const { lang } = useLanguage();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const color = getDomainColor(entry.url || entry.title);
 
@@ -184,7 +188,7 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
         <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
           <button
             onClick={onToggleFavourite}
-            title={entry.favourite ? "Favorilerden çıkar" : "Favoriye ekle"}
+            title={entry.favourite ? t("entryDetail.removeFav") : t("entryDetail.addFav")}
             style={{
               width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
               background: entry.favourite ? "rgba(251,191,36,0.12)" : "transparent",
@@ -210,12 +214,12 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
             onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-accent)"; }}
           >
             <SvgIcon d={EDIT_D} size={11} />
-            Düzenle
+            {t("entryDetail.edit")}
           </button>
 
           {deleteConfirm ? (
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <span style={{ fontSize: 11.5, color: "var(--color-danger)" }}>Sil?</span>
+              <span style={{ fontSize: 11.5, color: "var(--color-danger)" }}>{t("entryDetail.confirmDelete")}</span>
               <button
                 onClick={onDelete}
                 style={{
@@ -224,7 +228,7 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
                   fontSize: 12, fontWeight: 600, cursor: "pointer",
                 }}
               >
-                Evet
+                {t("entryDetail.confirmYes")}
               </button>
               <button
                 onClick={() => setDeleteConfirm(false)}
@@ -235,13 +239,13 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
                   color: "var(--color-text-secondary)",
                 }}
               >
-                Hayır
+                {t("entryDetail.confirmNo")}
               </button>
             </div>
           ) : (
             <button
               onClick={() => setDeleteConfirm(true)}
-              title="Sil"
+              title={t("entryDetail.delete")}
               style={{
                 width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
                 background: "transparent", border: "1px solid var(--color-border)",
@@ -259,11 +263,11 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
 
       {/* Content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px" }}>
-        <FieldRow label="Kullanıcı / E-posta" value={entry.username} />
-        <FieldRow label="Şifre" value={entry.password} secret monospace />
-        <FieldRow label="Website" value={entry.url} />
+        <FieldRow label={t("entryDetail.field.username")} value={entry.username} />
+        <FieldRow label={t("entryDetail.field.password")} value={entry.password} secret monospace />
+        <FieldRow label={t("entryDetail.field.website")} value={entry.url} />
         {entry.totpSecret && (
-          <FieldRow label="TOTP Anahtarı" value={entry.totpSecret} secret monospace />
+          <FieldRow label={t("entryDetail.field.totp")} value={entry.totpSecret} secret monospace />
         )}
         {entry.notes && (
           <div style={{ marginBottom: 10 }}>
@@ -272,7 +276,7 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
               letterSpacing: "0.06em", textTransform: "uppercase",
               marginBottom: 3, padding: "0 4px",
             }}>
-              Notlar
+              {t("entryDetail.notes")}
             </div>
             <pre
               data-selectable
@@ -298,7 +302,7 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
               letterSpacing: "0.06em", textTransform: "uppercase",
               marginBottom: 6, padding: "0 4px",
             }}>
-              Etiketler
+              {t("entryDetail.tags")}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {entry.tags.map((tag) => (
@@ -323,8 +327,8 @@ export function EntryDetail({ entry, onEdit, onDelete, onToggleFavourite }: Entr
           color: "var(--color-text-subtle)",
           display: "flex", gap: 16,
         }}>
-          <span>Oluşturuldu: {new Date(entry.createdAt).toLocaleDateString("tr-TR")}</span>
-          <span>Güncellendi: {new Date(entry.updatedAt).toLocaleDateString("tr-TR")}</span>
+          <span>{t("entryDetail.created")} {new Date(entry.createdAt).toLocaleDateString(lang)}</span>
+          <span>{t("entryDetail.updated")} {new Date(entry.updatedAt).toLocaleDateString(lang)}</span>
         </div>
       </div>
     </div>

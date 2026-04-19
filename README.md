@@ -57,6 +57,9 @@ See [docs/ENCRYPTION.md](docs/ENCRYPTION.md) for the complete design.
 - **Offline-first** — full functionality without internet; optional cloud sync
 - **Multi-platform** — Web, Desktop (Tauri), Mobile (RN)
 - **Native autofill** — global hotkey reads the active browser's URL and types credentials; no extension required
+- **Multi-match picker** — when a site has several saved logins, a keyboard-navigable popup lets you pick one before credentials are typed
+- **Customisable shortcut** — rebind the autofill hotkey from Settings; persisted across launches
+- **32-language UI** — English default, plus all 24 EU official languages, Turkish, and 7 additional European languages (live switching)
 - **TOTP/2FA** — built-in time-based OTP code generation (no dependency)
 - **Password generator** — cryptographically secure, configurable, strength analysis
 - **WebAuthn biometrics** — Face ID / fingerprint unlock
@@ -114,6 +117,7 @@ Full setup: [docs/SETUP.md](docs/SETUP.md)
 
 ## Documentation
 
+- [CHANGELOG.md](CHANGELOG.md) — Per-release changes
 - [ENCRYPTION.md](docs/ENCRYPTION.md) — Full cryptographic design + key lifecycle
 - [SECURITY.md](docs/SECURITY.md) — Threat model, mitigations, known limitations
 - [SETUP.md](docs/SETUP.md) — Setup and deployment guide

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import type { Vault } from "@akarpass/core";
+import { useT } from "../lib/i18n/index.js";
 
 type SidebarView = "all" | "favourites" | "recent" | "passwords" | "notes" | "trash" | string;
 
@@ -10,6 +11,7 @@ interface SidebarProps {
   onLock: () => void;
   onSync: () => Promise<void>;
   syncing: boolean;
+  onSettings: () => void;
 }
 
 // ── SVG Icons (no emojis) ────────────────────────────────────────────────────
@@ -33,11 +35,13 @@ const ICONS = {
   cloud: "M12 6.5A3.5 3.5 0 009.5 3 3.5 3.5 0 006 5.5h-.5A2.5 2.5 0 103 10.5h9A2.5 2.5 0 0015 8a2.5 2.5 0 00-3-1.5z",
   lock: "M8 1a3 3 0 00-3 3v2H4a1 1 0 00-1 1v6a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1h-1V4a3 3 0 00-3-3zm0 2a1 1 0 011 1v2H7V4a1 1 0 011-1zm0 6a1.5 1.5 0 110 3 1.5 1.5 0 010-3z",
   sync: "M13.5 6A5.5 5.5 0 002.8 9l-1.3-1.3-.7.7 2 2 .7.7.7-.7 2-2-.7-.7-1.1 1.1A4 4 0 0112 6h1.5zm-11 4A5.5 5.5 0 0013.2 7l1.3 1.3.7-.7-2-2-.7-.7-.7.7-2 2 .7.7 1.1-1.1A4 4 0 014 10H2.5z",
+  gear: "M8 5a3 3 0 100 6A3 3 0 008 5zm0 1a2 2 0 110 4 2 2 0 010-4zm0-5a.5.5 0 01.5.5v1.07A5.5 5.5 0 0112.43 4l.75-.75a.5.5 0 01.71.71l-.75.75A5.5 5.5 0 0114.43 8H15.5a.5.5 0 010 1h-1.07a5.5 5.5 0 01-1.5 3.93l.75.75a.5.5 0 01-.71.71l-.75-.75A5.5 5.5 0 018.5 14.93V16a.5.5 0 01-1 0v-1.07A5.5 5.5 0 013.57 13.43l-.75.75a.5.5 0 01-.71-.71l.75-.75A5.5 5.5 0 011.57 9H.5a.5.5 0 010-1h1.07A5.5 5.5 0 013.07 4.57l-.75-.75a.5.5 0 01.71-.71l.75.75A5.5 5.5 0 017.5 2.07V1a.5.5 0 01.5-.5z",
 };
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function Sidebar({ vault, activeView, onViewChange, onLock, onSync, syncing }: SidebarProps) {
+export function Sidebar({ vault, activeView, onViewChange, onLock, onSync, syncing, onSettings }: SidebarProps) {
+  const t = useT();
   const [syncError, setSyncError] = useState(false);
 
   const activeEntries = vault.entries.filter((e) => !e.deletedAt);
@@ -106,7 +110,7 @@ export function Sidebar({ vault, activeView, onViewChange, onLock, onSync, synci
                 marginTop: 1,
               }}
             >
-              {activeEntries.length} {activeEntries.length === 1 ? "item" : "items"}
+              {activeEntries.length} {activeEntries.length === 1 ? t("sidebar.item.one") : t("sidebar.item.many")}
             </div>
           </div>
         </div>
@@ -114,39 +118,39 @@ export function Sidebar({ vault, activeView, onViewChange, onLock, onSync, synci
 
       {/* Navigation */}
       <nav style={{ padding: "8px 6px", flex: 1, overflowY: "auto" }}>
-        <SectionLabel>Vault</SectionLabel>
+        <SectionLabel>{t("sidebar.section.vault")}</SectionLabel>
         <NavBtn
           icon={ICONS.all}
-          label="All Items"
+          label={t("sidebar.allItems")}
           count={activeEntries.length}
           active={activeView === "all"}
           onClick={() => onViewChange("all")}
         />
         <NavBtn
           icon={ICONS.star}
-          label="Favourites"
+          label={t("sidebar.favourites")}
           {...(favouriteCount > 0 ? { count: favouriteCount } : {})}
           active={activeView === "favourites"}
           onClick={() => onViewChange("favourites")}
         />
         <NavBtn
           icon={ICONS.clock}
-          label="Recently Used"
+          label={t("sidebar.recent")}
           active={activeView === "recent"}
           onClick={() => onViewChange("recent")}
         />
 
         <div style={{ marginTop: 6 }}>
-          <SectionLabel>Categories</SectionLabel>
+          <SectionLabel>{t("sidebar.section.categories")}</SectionLabel>
           <NavBtn
             icon={ICONS.key}
-            label="Passwords"
+            label={t("sidebar.passwords")}
             active={activeView === "passwords"}
             onClick={() => onViewChange("passwords")}
           />
           <NavBtn
             icon={ICONS.note}
-            label="Secure Notes"
+            label={t("sidebar.secureNotes")}
             active={activeView === "notes"}
             onClick={() => onViewChange("notes")}
           />
@@ -154,7 +158,7 @@ export function Sidebar({ vault, activeView, onViewChange, onLock, onSync, synci
 
         {vault.folders.length > 0 && (
           <div style={{ marginTop: 6 }}>
-            <SectionLabel>Folders</SectionLabel>
+            <SectionLabel>{t("sidebar.section.folders")}</SectionLabel>
             {vault.folders.map((folder) => (
               <NavBtn
                 key={folder.id}
@@ -171,7 +175,7 @@ export function Sidebar({ vault, activeView, onViewChange, onLock, onSync, synci
           <div style={{ marginTop: 6 }}>
             <NavBtn
               icon={ICONS.trash}
-              label="Trash"
+              label={t("sidebar.trash")}
               count={trashCount}
               active={activeView === "trash"}
               onClick={() => onViewChange("trash")}
@@ -191,15 +195,21 @@ export function Sidebar({ vault, activeView, onViewChange, onLock, onSync, synci
         }}
       >
         <FooterBtn
+          icon={ICONS.gear}
+          label={t("sidebar.settings")}
+          active={activeView === "settings"}
+          onClick={onSettings}
+        />
+        <FooterBtn
           icon={ICONS.sync}
-          label={syncing ? "Syncing…" : syncError ? "Sync failed" : "Sync now"}
+          label={syncing ? t("sidebar.syncing") : syncError ? t("sidebar.syncFailed") : t("sidebar.syncNow")}
           spinning={syncing}
           danger={syncError}
           onClick={handleSync}
         />
         <FooterBtn
           icon={ICONS.lock}
-          label="Lock vault"
+          label={t("sidebar.lock")}
           onClick={onLock}
           lockHover
         />
@@ -311,6 +321,7 @@ function FooterBtn({
   spinning = false,
   danger = false,
   lockHover = false,
+  active = false,
 }: {
   icon: string;
   label: string;
@@ -318,6 +329,7 @@ function FooterBtn({
   spinning?: boolean;
   danger?: boolean;
   lockHover?: boolean;
+  active?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -326,6 +338,8 @@ function FooterBtn({
     ? "#fca5a5"
     : dangerHover
     ? "#fca5a5"
+    : active
+    ? "#c4c6f5"
     : hovered
     ? "var(--sidebar-text)"
     : "var(--sidebar-text-muted)";
@@ -340,17 +354,20 @@ function FooterBtn({
         padding: "6px 8px",
         background: dangerHover
           ? "rgba(239,68,68,0.1)"
+          : active
+          ? "var(--sidebar-active-bg)"
           : hovered
           ? "var(--sidebar-hover)"
           : "transparent",
         border: "none",
+        borderLeft: active ? "2px solid var(--sidebar-active-border)" : "2px solid transparent",
         borderRadius: 6,
         display: "flex",
         alignItems: "center",
         gap: 8,
         color,
         fontSize: 12,
-        fontWeight: 500,
+        fontWeight: active ? 600 : 500,
         cursor: spinning ? "not-allowed" : "pointer",
         transition: "all 0.1s",
         textAlign: "left",

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { VaultEntry } from "@akarpass/core";
+import { useT } from "../lib/i18n/index.js";
 
 interface EntryListProps {
   entries: VaultEntry[];
@@ -42,6 +43,7 @@ export function EntryList({
   searchQuery,
   onSearchChange,
 }: EntryListProps) {
+  const t = useT();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
@@ -75,7 +77,7 @@ export function EntryList({
           </svg>
           <input
             type="search"
-            placeholder="Ara…"
+            placeholder={t("entryList.search")}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             style={{
@@ -97,7 +99,7 @@ export function EntryList({
 
         <button
           onClick={onAddNew}
-          title="Yeni giriş (Ctrl+N)"
+          title={t("entryList.newEntry")}
           style={{
             width: 30, height: 30, flexShrink: 0,
             background: "var(--color-accent)",
@@ -120,7 +122,7 @@ export function EntryList({
       {entries.length > 0 && (
         <div style={{ padding: "5px 12px", borderBottom: "1px solid var(--color-border)", background: "var(--color-bg)" }}>
           <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--color-text-subtle)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-            {entries.length} giriş
+            {entries.length} {t("entryList.countSuffix")}
           </span>
         </div>
       )}
@@ -137,7 +139,7 @@ export function EntryList({
               <path d="M8 11V7a4 4 0 018 0v4" stroke="var(--color-text)" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
             <p style={{ color: "var(--color-text-subtle)", fontSize: 12.5 }}>
-              {searchQuery ? "Sonuç bulunamadı" : "Henüz giriş yok"}
+              {searchQuery ? t("entryList.noResults") : t("entryList.noEntries")}
             </p>
             {!searchQuery && (
               <button
@@ -148,7 +150,7 @@ export function EntryList({
                   fontSize: 12, fontWeight: 600, cursor: "pointer",
                 }}
               >
-                İlk girişi ekle
+                {t("entryList.addFirst")}
               </button>
             )}
           </div>

@@ -7,6 +7,8 @@ import { EntryDetail } from "./EntryDetail.js";
 import { EntryEditor } from "./EntryEditor.js";
 import { PasswordGenerator } from "./PasswordGenerator.js";
 import { AutofillBanner } from "./AutofillBanner.js";
+import { SettingsPanel } from "./SettingsPanel.js";
+import { useT } from "../lib/i18n/index.js";
 
 type SidebarView = "all" | "favourites" | "recent" | "passwords" | "notes" | "trash" | string;
 type RightPanel = "detail" | "editor" | "generator" | null;
@@ -26,6 +28,7 @@ interface VaultScreenProps {
 }
 
 export function VaultScreen({ vaultService, navigate }: VaultScreenProps) {
+  const t = useT();
   const [vault, setVault] = useState<Vault | null>(() => vaultService.getActiveVault());
   const [sidebarView, setSidebarView] = useState<SidebarView>("all");
   const [selectedEntry, setSelectedEntry] = useState<VaultEntry | null>(null);
@@ -51,7 +54,7 @@ export function VaultScreen({ vaultService, navigate }: VaultScreenProps) {
           <svg width="32" height="32" viewBox="0 0 16 16" style={{ color: "var(--color-text)", marginBottom: 10 }}>
             <path d="M8 1a3 3 0 00-3 3v2H4a1 1 0 00-1 1v6a1 1 0 001 1h8a1 1 0 001-1V7a1 1 0 00-1-1h-1V4a3 3 0 00-3-3zm0 2a1 1 0 011 1v2H7V4a1 1 0 011-1zm0 6a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" fill="currentColor" />
           </svg>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>Vault is locked</p>
+          <p style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>{t("vault.isLocked")}</p>
         </div>
       </div>
     );
@@ -160,6 +163,13 @@ export function VaultScreen({ vaultService, navigate }: VaultScreenProps) {
     }
   }
 
+  function handleSettings() {
+    setSidebarView("settings");
+    setSelectedEntry(null);
+    setRightPanel(null);
+    setSearchQuery("");
+  }
+
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <AutofillBanner />
@@ -172,56 +182,64 @@ export function VaultScreen({ vaultService, navigate }: VaultScreenProps) {
         onLock={handleLock}
         onSync={handleSync}
         syncing={syncing}
+        onSettings={handleSettings}
       />
 
-      {/* Entry list */}
-      <EntryList
-        entries={filteredEntries}
-        selectedId={selectedEntry?.id ?? null}
-        onSelect={handleSelectEntry}
-        onAddNew={handleAddNew}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-
-      {/* Right panel */}
-      <div style={{ flex: 1, height: "100%", overflow: "hidden", display: "flex" }}>
-        {rightPanel === "detail" && selectedEntry && (
-          <EntryDetail
-            entry={selectedEntry}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onToggleFavourite={handleToggleFavourite}
+      {sidebarView === "settings" ? (
+        <SettingsPanel />
+      ) : (
+        <>
+          {/* Entry list */}
+          <EntryList
+            entries={filteredEntries}
+            selectedId={selectedEntry?.id ?? null}
+            onSelect={handleSelectEntry}
+            onAddNew={handleAddNew}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
-        )}
 
-        {rightPanel === "editor" && (
-          <EntryEditor
-            initial={editingEntry ?? null}
-            onSave={handleSaveEntry}
-            onCancel={() => {
-              setRightPanel(selectedEntry ? "detail" : null);
-              setEditingEntry(undefined);
-            }}
-          />
-        )}
+          {/* Right panel */}
+          <div style={{ flex: 1, height: "100%", overflow: "hidden", display: "flex" }}>
+            {rightPanel === "detail" && selectedEntry && (
+              <EntryDetail
+                entry={selectedEntry}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onToggleFavourite={handleToggleFavourite}
+              />
+            )}
 
-        {rightPanel === "generator" && (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg)", padding: 32 }}>
-            <PasswordGenerator standalone />
+            {rightPanel === "editor" && (
+              <EntryEditor
+                initial={editingEntry ?? null}
+                onSave={handleSaveEntry}
+                onCancel={() => {
+                  setRightPanel(selectedEntry ? "detail" : null);
+                  setEditingEntry(undefined);
+                }}
+              />
+            )}
+
+            {rightPanel === "generator" && (
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg)", padding: 32 }}>
+                <PasswordGenerator standalone />
+              </div>
+            )}
+
+            {rightPanel === null && (
+              <EmptyState onAddNew={handleAddNew} hasEntries={allActive.length > 0} />
+            )}
           </div>
-        )}
-
-        {rightPanel === null && (
-          <EmptyState onAddNew={handleAddNew} hasEntries={allActive.length > 0} />
-        )}
-      </div>
+        </>
+      )}
       </div>
     </div>
   );
 }
 
 function EmptyState({ onAddNew, hasEntries }: { onAddNew: () => void; hasEntries: boolean }) {
+  const t = useT();
   return (
     <div
       style={{
@@ -242,12 +260,10 @@ function EmptyState({ onAddNew, hasEntries }: { onAddNew: () => void; hasEntries
         </svg>
       </div>
       <p style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)", opacity: 0.35 }}>
-        {hasEntries ? "Select an item" : "Your vault is empty"}
+        {hasEntries ? t("vault.empty.selectItem") : t("vault.empty.vaultEmpty")}
       </p>
       <p style={{ fontSize: 12.5, color: "var(--color-text-subtle)", maxWidth: 240, lineHeight: 1.6 }}>
-        {hasEntries
-          ? "Click an entry on the left to view its details."
-          : "Add your first login, password, or secure note."}
+        {hasEntries ? t("vault.empty.clickEntry") : t("vault.empty.addFirst")}
       </p>
       {!hasEntries && (
         <button
@@ -267,7 +283,7 @@ function EmptyState({ onAddNew, hasEntries }: { onAddNew: () => void; hasEntries
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-accent-hover)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-accent)"; }}
         >
-          Add first item
+          {t("vault.empty.addButton")}
         </button>
       )}
     </div>

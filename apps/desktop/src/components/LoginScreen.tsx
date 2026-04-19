@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useT } from "../lib/i18n/index.js";
 
 interface AuthService {
   signIn(email: string, password: string): Promise<{ error?: string }>;
@@ -46,19 +47,20 @@ const LABEL: React.CSSProperties = {
   textTransform: "uppercase", letterSpacing: "0.06em",
 };
 
-const FEATURES = [
-  [SHIELD_D, "AES-GCM + ML-KEM şifreleme"],
-  [CLOUD_D,  "Şifreli bulut senkronizasyonu"],
-  [BOLT_D,   "Tarayıcıda otomatik doldurma"],
-  [LOCK_D,   "TOTP / 2FA desteği"],
-] as [string, string][];
+const FEATURE_ICONS: [string, "login.feature.crypto" | "login.feature.sync" | "login.feature.autofill" | "login.feature.totp"][] = [
+  [SHIELD_D, "login.feature.crypto"],
+  [CLOUD_D,  "login.feature.sync"],
+  [BOLT_D,   "login.feature.autofill"],
+  [LOCK_D,   "login.feature.totp"],
+];
 
 export function LoginScreen({ authService, vaultService, navigate }: LoginScreenProps) {
+  const t = useT();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [masterPassword, setMasterPassword] = useState("");
-  const [vaultName, setVaultName] = useState("Kişisel");
+  const [vaultName, setVaultName] = useState(t("login.defaultVaultName"));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
@@ -77,12 +79,12 @@ export function LoginScreen({ authService, vaultService, navigate }: LoginScreen
       } else {
         const { error: authErr } = await authService.signUp(email, password);
         if (authErr) { setError(authErr); return; }
-        if (!masterPassword) { setError("Master şifre zorunludur."); return; }
-        await vaultService.createNewVault(masterPassword, vaultName || "Kişisel");
+        if (!masterPassword) { setError(t("login.error.masterRequired")); return; }
+        await vaultService.createNewVault(masterPassword, vaultName || t("login.defaultVaultName"));
         navigate("/vault");
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Bir hata oluştu.");
+      setError(err instanceof Error ? err.message : t("login.error.generic"));
     } finally {
       setLoading(false);
     }
@@ -115,20 +117,20 @@ export function LoginScreen({ authService, vaultService, navigate }: LoginScreen
             <span style={{ color: "#fff", fontSize: 17, fontWeight: 700 }}>AkarPass</span>
           </div>
 
-          <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 700, lineHeight: 1.3, marginBottom: 10 }}>
-            Zero-knowledge<br />şifre yöneticisi
+          <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 700, lineHeight: 1.3, marginBottom: 10, whiteSpace: "pre-line" }}>
+            {t("login.tagline")}
           </h1>
           <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, lineHeight: 1.6 }}>
-            Vault cihazınızda şifrelenir. Sunucu şifrelerinizi asla görmez.
+            {t("login.taglineSub")}
           </p>
 
           <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 12 }}>
-            {FEATURES.map(([iconD, text]) => (
-              <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {FEATURE_ICONS.map(([iconD, key]) => (
+              <div key={key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ color: "rgba(139,92,246,0.9)", flexShrink: 0 }}>
                   <Icon d={iconD} size={14} />
                 </span>
-                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5 }}>{text}</span>
+                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5 }}>{t(key)}</span>
               </div>
             ))}
           </div>
@@ -160,31 +162,29 @@ export function LoginScreen({ authService, vaultService, navigate }: LoginScreen
                   boxShadow: mode === m ? "var(--shadow-sm)" : "none",
                 }}
               >
-                {m === "signin" ? "Giriş Yap" : "Kayıt Ol"}
+                {m === "signin" ? t("login.tab.signin") : t("login.tab.signup")}
               </button>
             ))}
           </div>
 
           <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text)", marginBottom: 6 }}>
-            {mode === "signin" ? "Tekrar hoş geldiniz" : "Hesap oluştur"}
+            {mode === "signin" ? t("login.welcomeBack") : t("login.createAccount")}
           </h2>
           <p style={{ fontSize: 13, color: "var(--color-text-subtle)", marginBottom: 24 }}>
-            {mode === "signin"
-              ? "Vault'unuza erişmek için giriş yapın"
-              : "Şifrelerinizi güvenle yönetmeye başlayın"}
+            {mode === "signin" ? t("login.subtitle.signin") : t("login.subtitle.signup")}
           </p>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
-              <label style={LABEL}>E-posta</label>
+              <label style={LABEL}>{t("login.field.email")}</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="siz@example.com" required autoFocus style={INPUT}
+                placeholder={t("login.field.emailPlaceholder")} required autoFocus style={INPUT}
                 onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-accent)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.12)"; }}
                 onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.boxShadow = "none"; }} />
             </div>
 
             <div>
-              <label style={LABEL}>Hesap Şifresi</label>
+              <label style={LABEL}>{t("login.field.accountPassword")}</label>
               <PasswordInput
                 value={password} onChange={setPassword}
                 show={showPw} onToggle={() => setShowPw(!showPw)}
@@ -195,20 +195,20 @@ export function LoginScreen({ authService, vaultService, navigate }: LoginScreen
             {mode === "signup" && (
               <>
                 <div>
-                  <label style={LABEL}>Master Şifre</label>
+                  <label style={LABEL}>{t("login.field.masterPassword")}</label>
                   <PasswordInput
                     value={masterPassword} onChange={setMasterPassword}
                     show={showMPw} onToggle={() => setShowMPw(!showMPw)}
-                    placeholder="Vault'u şifreler — sunucuya gönderilmez" required
+                    placeholder={t("login.field.masterPlaceholder")} required
                   />
                   <p style={{ fontSize: 11, color: "var(--color-text-subtle)", marginTop: 5, lineHeight: 1.5 }}>
-                    Bu şifreyi kaybederseniz verileriniz kurtarılamaz.
+                    {t("login.field.masterHelp")}
                   </p>
                 </div>
                 <div>
-                  <label style={LABEL}>Vault Adı</label>
+                  <label style={LABEL}>{t("login.field.vaultName")}</label>
                   <input type="text" value={vaultName} onChange={(e) => setVaultName(e.target.value)}
-                    placeholder="Kişisel" style={INPUT}
+                    placeholder={t("login.defaultVaultName")} style={INPUT}
                     onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-accent)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.12)"; }}
                     onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.boxShadow = "none"; }} />
                 </div>
@@ -239,7 +239,7 @@ export function LoginScreen({ authService, vaultService, navigate }: LoginScreen
                 boxShadow: loading ? "none" : "0 4px 12px rgba(99,102,241,0.3)",
               }}
             >
-              {loading ? "Lütfen bekleyin…" : mode === "signin" ? "Giriş Yap" : "Hesap Oluştur"}
+              {loading ? t("login.submit.loading") : mode === "signin" ? t("login.submit.signin") : t("login.submit.signup")}
             </button>
           </form>
         </div>

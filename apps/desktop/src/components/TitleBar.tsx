@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useT } from "../lib/i18n/index.js";
 
 export function TitleBar() {
+  const t = useT();
   const win = getCurrentWindow();
   const [maximized, setMaximized] = useState(false);
 
@@ -81,12 +83,12 @@ export function TitleBar() {
           WebkitAppRegion: "no-drag",
         }}
       >
-        <WinBtn onClick={minimize} title="Küçült">
+        <WinBtn onClick={minimize} title={t("titlebar.minimize")}>
           <svg width="10" height="1" viewBox="0 0 10 1">
             <rect width="10" height="1" fill="currentColor" />
           </svg>
         </WinBtn>
-        <WinBtn onClick={toggleMax} title={maximized ? "Geri Yükle" : "Büyüt"}>
+        <WinBtn onClick={toggleMax} title={maximized ? t("titlebar.restore") : t("titlebar.maximize")}>
           {maximized ? (
             <svg width="10" height="10" viewBox="0 0 10 10">
               <rect x="2" y="0" width="8" height="8" fill="none" stroke="currentColor" strokeWidth="1" />
@@ -98,7 +100,7 @@ export function TitleBar() {
             </svg>
           )}
         </WinBtn>
-        <WinBtn onClick={close} title="Kapat" danger>
+        <WinBtn onClick={close} title={t("titlebar.close")} danger>
           <svg width="10" height="10" viewBox="0 0 10 10">
             <line x1="0" y1="0" x2="10" y2="10" stroke="currentColor" strokeWidth="1.2" />
             <line x1="10" y1="0" x2="0" y2="10" stroke="currentColor" strokeWidth="1.2" />

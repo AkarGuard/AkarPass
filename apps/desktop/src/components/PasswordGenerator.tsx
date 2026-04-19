@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { generatePassword, type PasswordGeneratorOptions } from "@akarpass/core";
+import { useT } from "../lib/i18n/index.js";
+import type { MessageKey } from "../lib/i18n/en.js";
 
 interface PasswordGeneratorProps {
   onUse?: (password: string) => void;
@@ -11,7 +13,7 @@ const DEFAULT_OPTIONS: PasswordGeneratorOptions = {
   digits: true, symbols: true, excludeAmbiguous: true, customChars: "",
 };
 
-function strengthInfo(pw: string): { label: string; color: string; width: string } {
+function strengthInfo(pw: string): { labelKey: MessageKey; color: string; width: string } {
   const len = pw.length;
   const hasUpper = /[A-Z]/.test(pw);
   const hasLower = /[a-z]/.test(pw);
@@ -19,11 +21,11 @@ function strengthInfo(pw: string): { label: string; color: string; width: string
   const hasSymbol = /[^A-Za-z0-9]/.test(pw);
   const variety = [hasUpper, hasLower, hasDigit, hasSymbol].filter(Boolean).length;
 
-  if (len < 8 || variety < 2) return { label: "Çok zayıf", color: "#ef4444", width: "20%" };
-  if (len < 12 || variety < 3) return { label: "Zayıf",    color: "#f97316", width: "45%" };
-  if (len < 16 || variety < 4) return { label: "Orta",     color: "#eab308", width: "65%" };
-  if (len < 20)                 return { label: "Güçlü",    color: "#22c55e", width: "80%" };
-  return                               { label: "Çok güçlü", color: "#10b981", width: "100%" };
+  if (len < 8 || variety < 2) return { labelKey: "generator.strength.veryWeak",   color: "#ef4444", width: "20%" };
+  if (len < 12 || variety < 3) return { labelKey: "generator.strength.weak",      color: "#f97316", width: "45%" };
+  if (len < 16 || variety < 4) return { labelKey: "generator.strength.medium",    color: "#eab308", width: "65%" };
+  if (len < 20)                 return { labelKey: "generator.strength.strong",    color: "#22c55e", width: "80%" };
+  return                               { labelKey: "generator.strength.veryStrong", color: "#10b981", width: "100%" };
 }
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
@@ -41,6 +43,7 @@ const COPY_D    = "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 
 const CHECK_D   = "M20 6L9 17l-5-5";
 
 export function PasswordGenerator({ onUse, standalone = false }: PasswordGeneratorProps) {
+  const t = useT();
   const [options, setOptions] = useState<PasswordGeneratorOptions>(DEFAULT_OPTIONS);
   const [password, setPassword] = useState(() => generatePassword(DEFAULT_OPTIONS));
   const [copied, setCopied] = useState(false);
@@ -88,7 +91,7 @@ export function PasswordGenerator({ onUse, standalone = false }: PasswordGenerat
     <div style={container}>
       {standalone && (
         <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", marginBottom: 20 }}>
-          Şifre Üretici
+          {t("generator.title")}
         </h2>
       )}
 
@@ -109,7 +112,7 @@ export function PasswordGenerator({ onUse, standalone = false }: PasswordGenerat
         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
           <SmallBtn onClick={copy} active={copied}>
             <Icon d={copied ? CHECK_D : COPY_D} />
-            {copied ? "Kopyalandı" : "Kopyala"}
+            {copied ? t("generator.copied") : t("generator.copy")}
           </SmallBtn>
           <SmallBtn onClick={() => regenerate(options)}>
             <Icon d={REFRESH_D} />
@@ -126,14 +129,14 @@ export function PasswordGenerator({ onUse, standalone = false }: PasswordGenerat
           }} />
         </div>
         <div style={{ fontSize: 11, color: strength.color, fontWeight: 600, marginTop: 4, textAlign: "right" }}>
-          {strength.label}
+          {t(strength.labelKey)}
         </div>
       </div>
 
       {/* Length slider */}
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text)" }}>Uzunluk</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text)" }}>{t("generator.length")}</label>
           <span style={{
             fontSize: 12, fontWeight: 700, color: "var(--color-accent)",
             background: "var(--color-accent-light)", padding: "1px 8px", borderRadius: 20,
@@ -154,7 +157,7 @@ export function PasswordGenerator({ onUse, standalone = false }: PasswordGenerat
       {/* Character options */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--color-text-subtle)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          Karakter seti
+          {t("generator.charset")}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <button onClick={() => update("uppercase", !options.uppercase)} style={toggleStyle(options.uppercase)}>ABC</button>
@@ -162,7 +165,7 @@ export function PasswordGenerator({ onUse, standalone = false }: PasswordGenerat
           <button onClick={() => update("digits",    !options.digits)}    style={toggleStyle(options.digits)}>123</button>
           <button onClick={() => update("symbols",   !options.symbols)}   style={toggleStyle(options.symbols)}>!@#</button>
           <button onClick={() => update("excludeAmbiguous", !options.excludeAmbiguous)} style={toggleStyle(options.excludeAmbiguous)}>
-            0/O/l hariç
+            {t("generator.excludeAmbiguous")}
           </button>
         </div>
       </div>
@@ -183,7 +186,7 @@ export function PasswordGenerator({ onUse, standalone = false }: PasswordGenerat
           onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
         >
-          Bu şifreyi kullan
+          {t("generator.use")}
         </button>
       )}
     </div>

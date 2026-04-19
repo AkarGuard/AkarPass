@@ -82,6 +82,8 @@ pub fn run() {
             list_vaults,
             autofill::autofill_get_target,
             autofill::autofill_type_credentials,
+            autofill::autofill_get_shortcut,
+            autofill::autofill_set_shortcut,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

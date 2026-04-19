@@ -20,6 +20,7 @@ interface AutofillTarget {
   url: string | null;
   appName: string;
   windowTitle: string;
+  hwnd: number | null;
 }
 
 export type AutofillStatus =
@@ -27,7 +28,14 @@ export type AutofillStatus =
   | { kind: "typed"; entry: VaultEntry; target: AutofillTarget }
   | { kind: "no-match"; target: AutofillTarget }
   | { kind: "locked" }
-  | { kind: "error"; message: string };
+  | { kind: "error"; message: string }
+  | {
+      kind: "multi-match";
+      target: AutofillTarget;
+      matches: VaultEntry[];
+      onChoose: (entry: VaultEntry) => Promise<void>;
+      onCancel: () => void;
+    };
 
 export type AutofillNotify = (status: AutofillStatus) => void;
 
@@ -62,6 +70,35 @@ function findMatches(vault: Vault, target: AutofillTarget): VaultEntry[] {
     if (urlMatches.length > 0) return urlMatches;
   }
 
+  // Title heuristic — browsers put the host (or brand) in the window title
+  // ("GitHub · foo/bar - Google Chrome"). We compare space-insensitively so a
+  // site branded as "MHZ Telekom" still matches a vault entry on
+  // mhztelekom.com. This is the safety net for windows where UIA can't
+  // reach the omnibox (PWA frames, niche browsers, hardened tabs).
+  const title = target.windowTitle.toLowerCase();
+  const titleSquashed = title.replace(/\s+/g, "");
+  if (title.length > 0) {
+    const titleMatches = entries.filter((e) => {
+      const entryHost = safeDomain(e.url);
+      if (entryHost !== null) {
+        const root = rootDomain(entryHost);
+        if (title.includes(root) || titleSquashed.includes(root)) return true;
+        const brand = root.split(".")[0];
+        if (
+          brand &&
+          brand.length >= 4 &&
+          (title.includes(brand) || titleSquashed.includes(brand))
+        ) {
+          return true;
+        }
+      }
+      const entryTitle = e.title.toLowerCase().trim();
+      if (entryTitle.length >= 4 && title.includes(entryTitle)) return true;
+      return false;
+    });
+    if (titleMatches.length > 0) return titleMatches;
+  }
+
   const appKey = target.appName.toLowerCase().replace(/\.exe$/, "").trim();
   if (appKey.length >= 3) {
     return entries.filter(
@@ -78,7 +115,7 @@ export async function mountAutofillBridge(notify: AutofillNotify): Promise<Unlis
   return listen<AutofillTarget | null>("autofill:triggered", async (evt) => {
     const target = evt.payload;
     if (!target) {
-      notify({ kind: "error", message: "Aktif pencere okunamadı." });
+      notify({ kind: "error", message: "Could not read active window." });
       return;
     }
 
@@ -94,20 +131,37 @@ export async function mountAutofillBridge(notify: AutofillNotify): Promise<Unlis
       return;
     }
 
-    const entry = matches[0]!;
-    try {
-      await invoke("autofill_type_credentials", {
-        username: entry.username,
-        password: entry.password,
-        pressEnter: false,
-      });
-      notify({ kind: "typed", entry, target });
-    } catch (e) {
-      notify({
-        kind: "error",
-        message: e instanceof Error ? e.message : String(e),
-      });
+    const resolvedTarget: AutofillTarget = target;
+    const typeEntry = async (entry: VaultEntry): Promise<void> => {
+      try {
+        await invoke("autofill_type_credentials", {
+          username: entry.username,
+          password: entry.password,
+          pressEnter: false,
+          targetHwnd: resolvedTarget.hwnd,
+        });
+        notify({ kind: "typed", entry, target: resolvedTarget });
+      } catch (e) {
+        notify({
+          kind: "error",
+          message: e instanceof Error ? e.message : String(e),
+        });
+      }
+    };
+
+    if (matches.length === 1) {
+      await typeEntry(matches[0]!);
+      return;
     }
+
+    // Multi-match: defer to consumer (AutofillBanner) to render the picker.
+    notify({
+      kind: "multi-match",
+      target,
+      matches,
+      onChoose: typeEntry,
+      onCancel: () => notify({ kind: "idle" }),
+    });
   });
 }
 
