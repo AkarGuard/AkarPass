@@ -1,6 +1,18 @@
-use tauri::Manager;
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Manager,
+};
 
 mod autofill;
+
+fn show_main_window(app: &tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.unminimize();
+        let _ = win.show();
+        let _ = win.set_focus();
+    }
+}
 
 /// Tauri command: return the app data directory path for secure file storage.
 #[tauri::command]
@@ -73,6 +85,38 @@ pub fn run() {
             if let Err(err) = autofill::init(&app.handle().clone()) {
                 eprintln!("autofill init failed: {err}");
             }
+
+            // System tray icon — always present. When the user minimises
+            // the main window (via the custom titlebar), the frontend calls
+            // `hide()` so the window leaves the taskbar and becomes a tray
+            // icon only. Left-click on the tray or "Show" menu item brings
+            // it back.
+            let show_item = MenuItem::with_id(app, "show", "Show AkarPass", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let tray_menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+            let _tray = TrayIconBuilder::with_id("akarpass-tray")
+                .tooltip("AkarPass")
+                .icon(app.default_window_icon().cloned().ok_or("missing window icon")?)
+                .menu(&tray_menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => show_main_window(app),
+                    "quit" => app.exit(0),
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        show_main_window(tray.app_handle());
+                    }
+                })
+                .build(app)?;
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

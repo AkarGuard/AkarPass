@@ -1,6 +1,6 @@
 [package]
 name = "akarpass-desktop"
-version = "0.3.0"
+version = "0.3.1"
 description = "AkarPass Desktop"
 authors = ["AkarPass Team"]
 edition = "2021"
@@ -18,7 +18,7 @@ path = "src/main.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2.1.1", features = [] }
+tauri = { version = "2.1.1", features = ["tray-icon"] }
 tauri-plugin-store = "2.1.0"
 tauri-plugin-opener = "2"
 tauri-plugin-global-shortcut = "2"

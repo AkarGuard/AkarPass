@@ -19,7 +19,10 @@ export function TitleBar() {
     return () => cleanup?.();
   }, [win]);
 
-  function minimize() { win.minimize().catch(() => {}); }
+  // "Minimize" on the custom titlebar hides the window to the system tray
+  // instead of putting it on the taskbar. The tray icon (registered in Rust
+  // setup) is then the only entry point back — click it, or use its menu.
+  function minimize() { win.hide().catch(() => {}); }
   function toggleMax() { win.toggleMaximize().then(() => win.isMaximized().then(setMaximized)).catch(() => {}); }
   function close() { win.close().catch(() => {}); }
 

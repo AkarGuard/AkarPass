@@ -4,6 +4,43 @@ All notable changes to AkarPass are documented here. This project follows
 [Semantic Versioning](https://semver.org/) and the
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 
+## [0.3.1] — 2026-04-19
+
+Follow-up to 0.3.0 polishing two UX issues users hit immediately.
+
+### Fixed
+
+- **Multi-match picker is now a real overlay.** The picker ran as a modal
+  inside the AkarPass main window, which meant the user had to Alt-Tab back
+  to AkarPass to see it. It is now a dedicated `picker` Tauri window —
+  frameless, always-on-top, skips the taskbar, centered on the active
+  screen. Opens on top of whatever the user is doing (browser, app) so the
+  autofill flow reads as a single interaction. Keyboard navigation (↑/↓,
+  Enter, Esc, 1–9) works identically.
+- **Minimising the main window now hides it to the system tray** instead
+  of parking it on the taskbar. A tray icon is registered at startup with a
+  "Show AkarPass" / "Quit" menu; left-clicking the tray icon also restores
+  the window. The close (✕) button still closes the app entirely.
+
+### Changed
+
+- The picker window loads the same bundle as the main window but
+  `main.tsx` now branches on `getCurrentWindow().label` — `"picker"`
+  renders the standalone `<PickerApp>`, `"main"` renders the full vault
+  app. Communication between the two windows uses Tauri events
+  (`picker:data`, `picker:ready`, `picker:choose`, `picker:cancel`).
+- `tauri` crate now enables the `tray-icon` feature.
+- The `subtitleFor` string shown in the picker is now the hostname (or app
+  name), not the full URL.
+
+### Known limitations
+
+- The picker window centers on the primary monitor on some platforms
+  rather than the monitor containing the foreground window — Tauri's
+  `center()` limitation.
+
+---
+
 ## [0.3.0] — 2026-04-19
 
 Desktop release: internationalisation, customisable autofill, multi-match

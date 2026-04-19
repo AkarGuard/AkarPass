@@ -12,7 +12,8 @@
 
 import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { activeEntries, type Vault, type VaultEntry } from "@akarpass/core";
 import * as vaultService from "./vault-service.js";
 
@@ -28,14 +29,7 @@ export type AutofillStatus =
   | { kind: "typed"; entry: VaultEntry; target: AutofillTarget }
   | { kind: "no-match"; target: AutofillTarget }
   | { kind: "locked" }
-  | { kind: "error"; message: string }
-  | {
-      kind: "multi-match";
-      target: AutofillTarget;
-      matches: VaultEntry[];
-      onChoose: (entry: VaultEntry) => Promise<void>;
-      onCancel: () => void;
-    };
+  | { kind: "error"; message: string };
 
 export type AutofillNotify = (status: AutofillStatus) => void;
 
@@ -154,14 +148,80 @@ export async function mountAutofillBridge(notify: AutofillNotify): Promise<Unlis
       return;
     }
 
-    // Multi-match: defer to consumer (AutofillBanner) to render the picker.
-    notify({
-      kind: "multi-match",
-      target,
-      matches,
-      onChoose: typeEntry,
-      onCancel: () => notify({ kind: "idle" }),
-    });
+    // Multi-match: hand off to the dedicated picker window (overlay,
+    // always-on-top, skipTaskbar) and wait for the user's choice.
+    const chosen = await promptPickerWindow(matches, resolvedTarget);
+    if (chosen) await typeEntry(chosen);
+  });
+}
+
+/**
+ * Show the standalone `picker` Tauri window, send it the match list, and
+ * resolve with the user's choice (or null on cancel). The picker window is
+ * pre-created (hidden) by `tauri.conf.json` — we just re-center, show it,
+ * and listen for `picker:choose` / `picker:cancel` events.
+ */
+async function promptPickerWindow(
+  matches: VaultEntry[],
+  target: AutofillTarget,
+): Promise<VaultEntry | null> {
+  const picker = await WebviewWindow.getByLabel("picker");
+  if (!picker) {
+    console.error("picker window not found");
+    return matches[0] ?? null;
+  }
+
+  return new Promise<VaultEntry | null>((resolve) => {
+    const unlistens: Array<() => void> = [];
+    let settled = false;
+
+    const cleanup = () => {
+      if (settled) return;
+      settled = true;
+      for (const fn of unlistens) { try { fn(); } catch { /* ignore */ } }
+      picker.hide().catch(() => {});
+    };
+
+    const sendData = () => {
+      void emitTo("picker", "picker:data", { matches, target });
+    };
+
+    listen<string>("picker:choose", (e) => {
+      const entry = matches.find((m) => m.id === e.payload) ?? null;
+      cleanup();
+      resolve(entry);
+    }).then((fn) => unlistens.push(fn));
+
+    listen("picker:cancel", () => {
+      cleanup();
+      resolve(null);
+    }).then((fn) => unlistens.push(fn));
+
+    // Picker emits this on mount — honour it in case the picker window was
+    // freshly created and the first `emitTo` below raced the listener setup.
+    listen("picker:ready", () => sendData()).then((fn) => unlistens.push(fn));
+
+    // Also send proactively: if the picker was already mounted from a
+    // previous trigger, `picker:ready` won't fire again, so this path is how
+    // subsequent invocations get their data.
+    sendData();
+
+    // Show the overlay. Re-center so it appears on whichever monitor the
+    // foreground window is on at the moment (best effort — Tauri recenters
+    // on the primary monitor on some platforms).
+    picker.center().catch(() => {});
+    picker.show().catch(() => {});
+    picker.setFocus().catch(() => {});
+
+    // Safety net: if the picker is somehow dismissed without emitting a
+    // response (user Alt-F4s it), don't leak this promise forever.
+    const timeout = window.setTimeout(() => {
+      if (!settled) {
+        cleanup();
+        resolve(null);
+      }
+    }, 120_000);
+    unlistens.push(() => window.clearTimeout(timeout));
   });
 }
 
